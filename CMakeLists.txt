@@ -15,5 +15,3 @@ find_package(sdl2-image CONFIG REQUIRED)
 target_link_libraries(chess PRIVATE SDL2::SDL2_image)
 
 file(COPY resources DESTINATION ${PROJECT_BINARY_DIR})
-
-

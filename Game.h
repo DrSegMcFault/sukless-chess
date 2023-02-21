@@ -37,7 +37,14 @@ class Game {
       bool isWhiteTurn = true; 
     };
 
-    State _state; 
+    struct Point {
+      int x = 0;
+      int y = 0;
+    };
+
+    State _state;
+
+    bool _has_render_auth = true;
 
     void renderPiece(SDL_Texture* txture, Piece p);
 
@@ -47,14 +54,12 @@ class Game {
 
     SDL_Texture* loadTexture(const char* filepath);
 
-    bool valid(int from_x, int from_y, int to_x, int to_y);
-
     // helper functions
-    bool jumpedPiece(int from_x, int from_y, int to_x, int to_y);
     bool resultsInCheck(int from_x, int from_y, int to_x, int to_y);
     void renderBackground();
-    void renderPossible(Piece p);
+    std::vector<Point> renderPossible(Piece p);
     void printBoard();
+    bool containsPoint(int x, int y, std::vector<Point> possible);
 };
 
 } // namespace chess

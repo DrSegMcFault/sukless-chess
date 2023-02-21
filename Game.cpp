@@ -134,14 +134,16 @@ void Chess::Game::run()
 {
   //cached piece that has been previously clicked
   std::optional<Piece> clicked;
-  bool waiting = false;
-
+  std::vector<Point> possible_moves;
   // main loop
   while (_state.game != GameState::EXIT) {
-    if (!waiting)
-      display(); 
+
+    if (_has_render_auth) {
+      display();
+    }
 
     SDL_Event ev;
+    
     SDL_WaitEvent(&ev);
 
     switch (ev.type) {
@@ -156,30 +158,41 @@ void Chess::Game::run()
         int grid_x = floor(x / (_screenH / COLS));
         int grid_y = floor(y / (_screenW / ROWS));
         
-        if (x < _screenW && y < _screenH) {
+        // investigate if this can be removed
+        if (x <= _screenW && y <= _screenH) {
           // get the piece that was clicked on
           if (!clicked.has_value()) {
-            if (_board[grid_y][grid_x]) {
-              clicked = _board[grid_y][grid_x];
-
-              // render possible moves here
-              renderPossible(_board[grid_y][grid_x]);
-              waiting = true;
-            } else {
-              clicked.reset();
+            if (auto this_piece = _board[grid_y][grid_x];
+                this_piece)
+            { 
+              if (this_piece.Color() == WHITE && _state.isWhiteTurn ||
+                  this_piece.Color() == BLACK && !_state.isWhiteTurn)
+              {
+                clicked = this_piece;
+                // stop rendering here and render the board, pieces,
+                // and possible moves with renderPossible
+                _has_render_auth = false;
+                possible_moves = renderPossible(_board[grid_y][grid_x]);
+              }
             }
+
           } else {
             //second click, get params and try to move
             if (clicked.value().color == Color::WHITE && _state.isWhiteTurn ||
                 clicked.value().color == Color::BLACK && !_state.isWhiteTurn)
             {
-              if (move(clicked.value().x, clicked.value().y, grid_y, grid_x)) {
+              // if the coordindates are in the list of possible moves
+              // and doesnt result in check for the SAME color
+              // then move. would be grid_y, grid_x
+              if (containsPoint(grid_y, grid_x, possible_moves)) {
+                move(clicked.value().x, clicked.value().y, grid_y, grid_x);
                 _state.isWhiteTurn = !_state.isWhiteTurn;
-                waiting = false;
+                _has_render_auth = true;
+                possible_moves.clear();
               }
             }
 
-             clicked.reset(); 
+            clicked.reset(); 
           } 
         }
         break;
@@ -224,9 +237,10 @@ void Chess::Game::renderBackground()
  *
  * Method: Game::renderPossible()
  * 
- * - find and display the possible moves, does not show capturable
+ * - find and display the possible moves, return the list of coordinates
+ *   that are valid for the piece to move to
  *****************************************************************************/
-void Chess::Game::renderPossible(Piece p)
+std::vector<Chess::Game::Point> Chess::Game::renderPossible(Piece p)
 {
  SDL_RenderClear(_renderer);
 
@@ -246,37 +260,83 @@ void Chess::Game::renderPossible(Piece p)
 
  // Display what we copied into the renderer
  auto* texture = loadTexture("resources/circle.png");
-
+ std::vector<Point> possible_moves;
  if (texture) {
   switch(p.type){
     case PAWN:
     {
-        auto mod = p.color == WHITE ? 1 : -1;
         SDL_Rect src = {0,0, 180, 180};
+        auto mod = p.color == WHITE ? 1 : -1;
+        // if there isnt a piece in front of the pawn, its possible
         if (!_board[p.x - mod][p.y]) {
-	      SDL_Rect dest = { 
+	        SDL_Rect dest = { 
                     _screenW / ROWS * p.y + 30 , 
 					          _screenH / COLS * (p.x - mod)  + 30,
 					          20,
 					          20};
-	      SDL_RenderCopy(_renderer, texture, &src, &dest);
+	        SDL_RenderCopy(_renderer, texture, &src, &dest);
+          possible_moves.push_back(Point{p.x - mod, p.y});
         }
-       if (!p.has_moved) {
-	      SDL_Rect dest2 = { 
+
+        if (_board[p.x - mod][p.y - mod] && p.color != _board[p.x-mod][p.y-mod].color) {
+	        SDL_Rect dest = { 
+                    _screenW / ROWS * (p.y - mod) + 30, 
+					          _screenH / COLS * (p.x - mod)  + 30,
+					          20,
+					          20};
+	        SDL_RenderCopy(_renderer, texture, &src, &dest);
+          possible_moves.push_back(Point{p.x - mod, p.y - mod});
+        }
+
+        if (_board[p.x - mod][p.y + mod] && p.Color() != _board[p.x-mod][p.y+mod].Color()) {
+	        SDL_Rect dest = { 
+                    _screenW / ROWS * (p.y + mod) + 30, 
+					          _screenH / COLS * (p.x - mod) + 30,
+					          20,
+					          20};
+	        SDL_RenderCopy(_renderer, texture, &src, &dest);
+          possible_moves.push_back(Point{p.x - mod, p.y + mod});
+        }
+
+        if (!p.has_moved && !_board[p.x - mod*2][p.y]) {
+	        SDL_Rect dest2 = { 
                     _screenW / ROWS * p.y + 30 , 
 					          _screenH / COLS * (p.x - mod*2)  + 30,
 					          20,
 					          20};
-	       SDL_RenderCopy(_renderer, texture, &src, &dest2);
-       }
+	        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+          possible_moves.push_back(Point{p.x - mod*2, p.y});
+        }
       break;
-    } 
+    }
+    case ROOK:
+    {
+      break;
+    }
+    case KING:
+    {
+      break;
+    }
+    case KNIGHT:
+    {
+      break;
+    }
+    case BISHOP:
+    {
+      break;
+    }
+    case QUEEN:
+    {
+      break;
+    }
     default:
       break;
   }
 
   SDL_RenderPresent(_renderer);
  }
+
+ return possible_moves;
 }
 
 /******************************************************************************
@@ -320,7 +380,7 @@ bool Chess::Game::move(int from_x, int from_y, int to_x, int to_y)
 
   // check if the piece can move in this way
   if (_board[from_x][from_y].isValidMove(to_x, to_y)) {
-    if (valid(from_x, from_y, to_x, to_y)) {
+    if (!resultsInCheck(from_x, from_y, to_x, to_y)) {
       //copy constructor desperately needed
       _board[to_x][to_y].x = to_x;
       _board[to_x][to_y].y = to_y;
@@ -340,39 +400,12 @@ bool Chess::Game::move(int from_x, int from_y, int to_x, int to_y)
 
 /******************************************************************************
  *
- * Method: Game::jumpedPiece()
- *
- *****************************************************************************/
-bool Chess::Game::jumpedPiece(int from_x, int from_y, int to_x, int to_y)
-{
-  if (_board[from_x][from_y].type == KNIGHT) {
-    return false;
-  }
-  return false;
-}
-
-/******************************************************************************
- *
  * Method: Game::resultsInCheck()
  *
  *****************************************************************************/
 bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
 {
   return false;
-}
-
-/******************************************************************************
- *
- * Method: Game::valid()
- *
- *****************************************************************************/
-bool Chess::Game::valid(int from_x, int from_y, int to_x, int to_y)
-{
-  if (!jumpedPiece(from_x, from_y, to_x, to_y) &&
-      !resultsInCheck(from_x, from_y, to_x, to_y) ) 
-  {
-    return true;
-  } else { return false; }
 }
 
 /******************************************************************************
@@ -388,4 +421,19 @@ void Chess::Game::printBoard()
    }
   std::cout << "\n";
  }
+}
+
+/******************************************************************************
+ *
+ * Method: Game::print_board()
+ *
+ *****************************************************************************/
+bool Chess::Game::containsPoint(int x, int y, std::vector<Point> possible)
+{
+  for (auto point : possible) {
+    if (point.x == x && point.y == y) {
+      return true;
+    }
+  }
+  return false;
 }

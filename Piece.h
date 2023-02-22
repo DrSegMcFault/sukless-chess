@@ -58,8 +58,6 @@ namespace Chess {
       std::string typeToString();
 
       std::string colorToString();
-
-      bool isValidMove(int new_x, int new_y);
   };
 
 } //namespace chess

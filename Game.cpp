@@ -21,11 +21,21 @@ Chess::Game::Game()
               SDL_WINDOW_SHOWN);
 
 
-  _renderer = SDL_CreateRenderer(_window, -1, 0);
-  
+  _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+
+  auto* surface = IMG_Load("/resources/circle.png");
+
+  if (surface) {
+    _circleTexture = SDL_CreateTextureFromSurface(_renderer, surface);
+  }
+
   if (!_window || !_renderer ) {
     std::cout << "ERROR IN INIT \n";
   }
+
+  // doing this here saves me a couple MB of ram
+  p_textures.insert({"/resources/pawn-white.png", loadTexture("/resources/pawn-white.png") });
+  p_textures.insert({"/resources/pawn-black.png", loadTexture("/resources/pawn-black.png") });
 
   // zero the _board
   for (int i = 0; i < ROWS; i++) {
@@ -33,14 +43,19 @@ Chess::Game::Game()
       if (i == 0) {
         if (j == 0) {
           _board[i][j] = Piece(i, j, PieceType::ROOK, Color::BLACK);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 1) {
           _board[i][j] = Piece(i, j, PieceType::KNIGHT, Color::BLACK);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 2) {
           _board[i][j] = Piece(i, j, PieceType::BISHOP, Color::BLACK);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 3) {
           _board[i][j] = Piece(i, j, PieceType::QUEEN, Color::BLACK);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 4) {
           _board[i][j] = Piece(i, j, PieceType::KING, Color::BLACK);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 5) {
           _board[i][j] = Piece(i, j, PieceType::BISHOP, Color::BLACK);
         } else if (j == 6) {
@@ -51,20 +66,24 @@ Chess::Game::Game()
         
       } else if (i == 1) {
         _board[i][j] = Piece(i, j, PieceType::PAWN, Color::BLACK);
-
       } else if (i == 6) {
         _board[i][j] = Piece(i, j, PieceType::PAWN, Color::WHITE);
       } else if (i == 7) {
         if (j == 0) {
           _board[i][j] = Piece(i, j, PieceType::ROOK, Color::WHITE);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 1) {
           _board[i][j] = Piece(i, j, PieceType::KNIGHT, Color::WHITE);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 2) {
           _board[i][j] = Piece(i, j, PieceType::BISHOP, Color::WHITE);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 3) {
           _board[i][j] = Piece(i, j, PieceType::QUEEN, Color::WHITE);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 4) {
           _board[i][j] = Piece(i, j, PieceType::KING, Color::WHITE);
+          p_textures.insert({_board[i][j].icon, loadTexture(_board[i][j].Icon()) });
         } else if (j == 5) {
           _board[i][j] = Piece(i, j, PieceType::BISHOP, Color::WHITE);
         } else if (j == 6) {
@@ -134,11 +153,17 @@ void Chess::Game::run()
 {
   //cached piece that has been previously clicked
   std::optional<Piece> clicked;
+  bool first = true;
+
   // main loop
+  // we only render if there is a click on the screen for performance
+
   while (_state.game != GameState::EXIT) {
 
-    if (_has_render_auth) {
+    SDL_RenderClear(_renderer);
+    if (first) {
       display();
+      first = false;
     }
 
     SDL_Event ev;
@@ -152,6 +177,8 @@ void Chess::Game::run()
 
       case SDL_MOUSEBUTTONDOWN:
       {
+        SDL_RenderClear(_renderer);
+        display();
         auto x = ev.button.x;
         auto y = ev.button.y;
         int grid_x = floor(x / (_screenH / COLS));
@@ -189,6 +216,8 @@ void Chess::Game::run()
                 _has_render_auth = true;
                 _possible_moves.clear();
               }
+              SDL_RenderClear(_renderer);
+              display();
             }
 
             clicked.reset(); 
@@ -249,15 +278,10 @@ void Chess::Game::renderPossible(Piece p)
   for (int i = 0; i < ROWS; i++) {
     for (int j = 0; j < COLS; j++) {
       if (_board[i][j]) {
-        auto* txture = loadTexture(_board[i][j].Icon());
-        if (txture) {
-          renderPiece(txture, _board[i][j]);
-        }
+        renderPiece(p_textures.at(_board[i][j].Icon()), _board[i][j]);
       }
     }
    }
-
- auto* texture = loadTexture("resources/circle.png");
 
  SDL_Rect src = {0,0, 180, 180};
 
@@ -273,13 +297,13 @@ void Chess::Game::renderPossible(Piece p)
 			          _screenH / COLS * x + 30,
 				        20,
 				        20};
-          SDL_RenderCopy(_renderer, texture, &src, &dest);
+          SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
           _possible_moves.push_back(Point{x, y});
       }
     }
  };
- // rendering a bunch of stuff out of bounds!!
- if (texture) {
+
+ if (_circleTexture) {
    switch (p.type){
      case PAWN:
      {
@@ -290,7 +314,7 @@ void Chess::Game::renderPossible(Piece p)
 					          _screenH / COLS * (p.x - mod)  + 30,
 					          20,
 					          20};
-         SDL_RenderCopy(_renderer, texture, &src, &dest);
+         SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
          _possible_moves.push_back(Point{p.x - mod, p.y});
        }
 
@@ -300,7 +324,7 @@ void Chess::Game::renderPossible(Piece p)
 		   	           _screenH / COLS * (p.x - mod)  + 30,
 			             20,
 			             20};
- 	       SDL_RenderCopy(_renderer, texture, &src, &dest);
+ 	       SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
          _possible_moves.push_back(Point{p.x - mod, p.y - mod});
        }
 
@@ -310,7 +334,7 @@ void Chess::Game::renderPossible(Piece p)
 			            _screenH / COLS * (p.x - mod) + 30,
 				          20,
 				          20};
-	       SDL_RenderCopy(_renderer, texture, &src, &dest);
+	       SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
          _possible_moves.push_back(Point{p.x - mod, p.y + mod});
        }
 
@@ -320,7 +344,7 @@ void Chess::Game::renderPossible(Piece p)
 				          _screenH / COLS * (p.x - mod*2)  + 30,
 				          20,
 				          20};
-	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{p.x - mod*2, p.y});
       }
       break;
@@ -328,7 +352,7 @@ void Chess::Game::renderPossible(Piece p)
 
     case ROOK:
     {
-      rookPossible(p, texture);
+      rookPossible(p);
       break;
     }
 
@@ -438,14 +462,14 @@ void Chess::Game::renderPossible(Piece p)
 
     case BISHOP:
     {
-      bishopPossible(p, texture);
+      bishopPossible(p);
       break;
     }
 
     case QUEEN:
     {
-      bishopPossible(p, texture);
-      rookPossible(p, texture);
+      bishopPossible(p);
+      rookPossible(p);
       break;
     }
 
@@ -473,10 +497,7 @@ void Chess::Game::display()
     for (int i = 0; i < ROWS; i++) {
       for (int j = 0; j < COLS; j++) {
         if (_board[i][j]) {
-          auto* txture = loadTexture(_board[i][j].Icon());
-          if (txture) {
-            renderPiece(txture, _board[i][j]);
-          }
+          renderPiece(p_textures.at(_board[i][j].Icon()), _board[i][j]);
         }
       }
     }
@@ -525,6 +546,11 @@ bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
   return false;
 }
 
+/******************************************************************************
+ *
+ * Method: Game::validPoint()
+ *
+ *****************************************************************************/
 const bool Chess::Game::validPoint(int x, int y) {
    return (x >= 0 && x < 8) && (y >=0 && y < 8);
 }
@@ -564,7 +590,7 @@ bool Chess::Game::containsPoint(int x, int y, std::vector<Point> possible)
  * Method: Game::rookPossible()
  *
  *****************************************************************************/
-void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
+void Chess::Game::rookPossible(Piece p)
 {
   SDL_Rect src = {0,0, 180, 180};
   {
@@ -577,7 +603,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
    	              _screenH / COLS * x + 30,
 				              20,
 				              20};
-	          SDL_RenderCopy(_renderer, texture, &src, &dest2);
+	          SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
             _possible_moves.push_back(Point{x, y});
             x++;
       } else if (_board[x][y].Color() != p.Color()) {
@@ -586,7 +612,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
 				        _screenH / COLS * x + 30,
 				        20,
 				        20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x = -1;
       } else {
@@ -605,7 +631,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x--;
       } else if (_board[x][y].Color() != p.Color()) {
@@ -614,7 +640,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x = -1;
       } else {
@@ -633,7 +659,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         y++;
       } else if (_board[x][y].Color() != p.Color()) {
@@ -642,7 +668,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
                 20,
                20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x = -1;
       } else {
@@ -661,7 +687,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         y--;
       } else if (_board[x][y].Color() != p.Color()) {
@@ -670,7 +696,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x  + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x = -1;
       } else {
@@ -680,7 +706,7 @@ void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
   }
 }
 
-void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
+void Chess::Game::bishopPossible(Piece p)
 {
   SDL_Rect src = {0,0, 180, 180};
   {
@@ -693,7 +719,7 @@ void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
   	              _screenH / COLS * x + 30,
 		              20,
 		              20};
-	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x++;
         y++;
@@ -703,7 +729,7 @@ void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
 	                _screenH / COLS * x + 30,
 	                20,
 		              20};
-	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x = -1;
       } else {
@@ -722,7 +748,7 @@ void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x--;
         y--;
@@ -732,7 +758,7 @@ void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x = -1;
       } else {
@@ -751,7 +777,7 @@ void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
 		            _screenH / COLS * x + 30,
 		            20,
 		            20};
-	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         y++;
         x--;
@@ -761,7 +787,7 @@ void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
 		            _screenH / COLS * x + 30,
 		            20,
 		            20};
-	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x = -1;
       } else {
@@ -780,7 +806,7 @@ void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         y--;
         x++;
@@ -790,7 +816,7 @@ void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
 	              _screenH / COLS * x + 30,
 	              20,
 	              20};
-        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
         _possible_moves.push_back(Point{x, y});
         x = -1;
       } else {

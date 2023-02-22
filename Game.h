@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-
+#include <map>
 #include "Piece.h"
 #include "SDL.h"
 #include "SDL_image.h"
@@ -31,6 +31,10 @@ class Game {
     SDL_Renderer* _renderer;
 
     Piece _board[ROWS][COLS];
+    
+    std::map<std::string, SDL_Texture*> p_textures; 
+    
+    SDL_Texture* _circleTexture;
 
     struct State {
       GameState game = GameState::PLAY;
@@ -41,29 +45,28 @@ class Game {
       int x = 0;
       int y = 0;
     };
+
     std::vector<Point> _possible_moves;
 
     State _state;
 
     bool _has_render_auth = true;
 
-    void renderPiece(SDL_Texture* txture, Piece p);
-
     bool move(int from_x, int from_y, int to_x, int to_y);
 
     void display();
 
-    SDL_Texture* loadTexture(const char* filepath);
-
     // helper functions
+    void renderPiece(SDL_Texture* txture, Piece p);
+    SDL_Texture* loadTexture(const char* filepath);
     bool resultsInCheck(int from_x, int from_y, int to_x, int to_y);
     void renderBackground();
     void renderPossible(Piece p);
     void printBoard();
     const bool validPoint(int x, int y);
     bool containsPoint(int x, int y, std::vector<Point> possible);
-    void rookPossible(Piece p, SDL_Texture* t);
-    void bishopPossible(Piece p, SDL_Texture* t);
+    void rookPossible(Piece p);
+    void bishopPossible(Piece p);
 };
 
 } // namespace chess

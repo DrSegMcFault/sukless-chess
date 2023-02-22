@@ -1,6 +1,6 @@
 #include <iostream>
 #include <optional>
-
+#include "common_enums.h"
 #include "Game.h"
 
 /******************************************************************************
@@ -197,8 +197,10 @@ void Chess::Game::run()
                 clicked = this_piece;
                 // stop rendering here and render the board, pieces,
                 // and possible moves with renderPossible
-                _has_render_auth = false;
-                renderPossible(_board[grid_y][grid_x]);
+                //_has_render_auth = false;
+
+                _possible_moves = generatePossible(_board[grid_y][grid_x], _board);
+                renderPossible();
               }
             }
 
@@ -210,12 +212,17 @@ void Chess::Game::run()
               // if the coordindates are in the list of possible moves
               // and doesnt result in check for the SAME color,
               // then move.
-              if (containsPoint(grid_y, grid_x, _possible_moves)) {
-                move(clicked.value().x, clicked.value().y, grid_y, grid_x);
+              if (containsPoint(grid_y, grid_x, _possible_moves) &&
+                  !resultsInCheck(clicked.value().x,
+                                  clicked.value().y,
+                                  grid_y, grid_x)) 
+              {
+                move(clicked.value().x, clicked.value().y, grid_y, grid_x, _board);
                 _state.isWhiteTurn = !_state.isWhiteTurn;
-                _has_render_auth = true;
+                //_has_render_auth = true;
                 _possible_moves.clear();
               }
+
               SDL_RenderClear(_renderer);
               display();
             }
@@ -265,10 +272,9 @@ void Chess::Game::renderBackground()
  *
  * Method: Game::renderPossible()
  * 
- * - find and display the possible moves, return the list of coordinates
- *   that are valid for the piece to move to
+ * - display the possible moves
  *****************************************************************************/
-void Chess::Game::renderPossible(Piece p)
+void Chess::Game::renderPossible()
 {
  SDL_RenderClear(_renderer);
 
@@ -284,201 +290,194 @@ void Chess::Game::renderPossible(Piece p)
    }
 
  SDL_Rect src = {0,0, 180, 180};
+ 
+ for (auto point : _possible_moves) {
+    auto x = point.x;
+    auto y = point.y;
 
- auto mod = p.color == WHITE ? 1 : -1;
-
- // determine if we should render a peice given x y
- // using the condition that the king and knight use
- auto knightKing = [&] (auto x, auto y) {
-   if (validPoint(x,y)) {
-      if (!_board[x][y] || (_board[x][y] && _board[x][y].Color() != p.Color())) {
-           SDL_Rect dest = {
-                _screenW / ROWS * y + 30,
-			          _screenH / COLS * x + 30,
-				        20,
-				        20};
-          SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
-          _possible_moves.push_back(Point{x, y});
-      }
-    }
- };
-
- if (_circleTexture) {
-   switch (p.type){
-     case PAWN:
-     {
-       // if there isnt a piece in front of the pawn, its possible
-       if (!_board[p.x - mod][p.y]) {
-         SDL_Rect dest = { 
-                    _screenW / ROWS * p.y + 30 , 
-					          _screenH / COLS * (p.x - mod)  + 30,
-					          20,
-					          20};
-         SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
-         _possible_moves.push_back(Point{p.x - mod, p.y});
-       }
-
-       if (_board[p.x - mod][p.y - mod] && p.color != _board[p.x-mod][p.y-mod].color) {
-	       SDL_Rect dest = { 
-                   _screenW / ROWS * (p.y - mod) + 30,
-		   	           _screenH / COLS * (p.x - mod)  + 30,
-			             20,
-			             20};
- 	       SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
-         _possible_moves.push_back(Point{p.x - mod, p.y - mod});
-       }
-
-       if (_board[p.x - mod][p.y + mod] && p.Color() != _board[p.x-mod][p.y+mod].Color()) {
-	       SDL_Rect dest = { 
-                  _screenW / ROWS * (p.y + mod) + 30,
-			            _screenH / COLS * (p.x - mod) + 30,
-				          20,
-				          20};
-	       SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
-         _possible_moves.push_back(Point{p.x - mod, p.y + mod});
-       }
-
-      if (!p.has_moved && !_board[p.x - mod*2][p.y]) {
-	      SDL_Rect dest2 = { 
-                  _screenW / ROWS * p.y + 30,
-				          _screenH / COLS * (p.x - mod*2)  + 30,
-				          20,
-				          20};
-	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{p.x - mod*2, p.y});
-      }
-      break;
-    }
-
-    case ROOK:
-    {
-      rookPossible(p);
-      break;
-    }
-
-    case KING:
-    {
-      {
-        auto x = p.x - 1;
-        auto y = p.y - 1;
-        knightKing(x, y);
-      }
-
-      {
-        auto x = p.x;
-        auto y = p.y - 1;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x + 1;
-        auto y = p.y - 1;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x + 1;
-        auto y = p.y;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x - 1;
-        auto y = p.y;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x - 1;
-        auto y = p.y + 1;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x;
-        auto y = p.y + 1;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x + 1;
-        auto y = p.y + 1;
-        knightKing(x,y);
-      }
-      break;
-    }
-
-    case KNIGHT:
-    {
-      {
-        auto x = p.x - 2;
-        auto y = p.y + 1;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x - 2;
-        auto y = p.y - 1;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x - 1;
-        auto y = p.y - 2;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x + 1;
-        auto y = p.y - 2;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x + 2;
-        auto y = p.y - 1;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x + 2;
-        auto y = p.y + 1;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x + 1;
-        auto y = p.y + 2;
-        knightKing(x,y);
-      }
-
-      {
-        auto x = p.x - 1;
-        auto y = p.y + 2;
-        knightKing(x,y);
-      }
-      break;
-    }
-
-    case BISHOP:
-    {
-      bishopPossible(p);
-      break;
-    }
-
-    case QUEEN:
-    {
-      bishopPossible(p);
-      rookPossible(p);
-      break;
-    }
-
-    default:
-      break;
-  }
-
-  SDL_RenderPresent(_renderer);
+    SDL_Rect dest = {
+              _screenW / ROWS * y + 30,
+		          _screenH / COLS * x + 30,
+			        20,
+			        20};
+    SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
  }
+
+ SDL_RenderPresent(_renderer);
+}
+
+/******************************************************************************
+ *
+ * Method: Game::generatePossible()
+ * 
+ * - display the possible moves
+ *****************************************************************************/
+std::vector<Chess::Game::Point> Chess::Game::generatePossible(Chess::Piece p, Piece (&board)[8][8] )
+{
+  std::vector<Point> possible;
+  auto mod = p.color == Chess::WHITE ? 1 : -1;
+
+  // determine if move is possible for knight and king
+  auto knightKing = [&] (auto x, auto y) {
+    if (validPoint(x,y)) {
+      if (!board[x][y] || (board[x][y] && board[x][y].Color() != p.Color())) {
+        possible.push_back(Point{x, y});
+      }
+    }
+  };
+
+  switch (p.type) {
+    case PAWN:
+    {
+      // if there isnt a piece in front of the pawn, its possible
+      if (!board[p.x - mod][p.y]) {
+        possible.push_back(Point{p.x - mod, p.y});
+      }
+
+      if (board[p.x - mod][p.y - mod] && p.color != board[p.x-mod][p.y-mod].color) {
+        possible.push_back(Point{p.x - mod, p.y - mod});
+      }
+
+      if (board[p.x - mod][p.y + mod] && p.Color() != board[p.x-mod][p.y+mod].Color()) {
+        possible.push_back(Point{p.x - mod, p.y + mod});
+      }
+
+     if (!p.has_moved && !board[p.x - mod*2][p.y]) {
+       possible.push_back(Point{p.x - mod*2, p.y});
+     }
+     break;
+   }
+
+   case ROOK:
+   {
+     rookPossible(p, board);
+     break;
+   }
+
+   case KING:
+   {
+     {
+       auto x = p.x - 1;
+       auto y = p.y - 1;
+       knightKing(x, y);
+     }
+
+     {
+       auto x = p.x;
+       auto y = p.y - 1;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x + 1;
+       auto y = p.y - 1;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x + 1;
+       auto y = p.y;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x - 1;
+       auto y = p.y;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x - 1;
+       auto y = p.y + 1;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x;
+       auto y = p.y + 1;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x + 1;
+       auto y = p.y + 1;
+       knightKing(x,y);
+     }
+     break;
+   }
+
+   case KNIGHT:
+   {
+     {
+       auto x = p.x - 2;
+       auto y = p.y + 1;
+       knightKing(x,y);
+     }
+ 
+     {
+       auto x = p.x - 2;
+       auto y = p.y - 1;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x - 1;
+       auto y = p.y - 2;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x + 1;
+       auto y = p.y - 2;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x + 2;
+       auto y = p.y - 1;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x + 2;
+       auto y = p.y + 1;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x + 1;
+       auto y = p.y + 2;
+       knightKing(x,y);
+     }
+
+     {
+       auto x = p.x - 1;
+       auto y = p.y + 2;
+       knightKing(x,y);
+     }
+     break;
+   }
+
+   case BISHOP:
+   {
+     auto b = bishopPossible(p, board);
+     possible.insert(std::end(possible), std::begin(b), std::end(b)); 
+     break;
+   }
+
+   case QUEEN:
+   {
+     auto b = bishopPossible(p, board);
+     possible.insert(std::end(possible), std::begin(b), std::end(b)); 
+     auto c = rookPossible(p, board);
+     possible.insert(std::end(possible), std::begin(c), std::end(c)); 
+     break;
+   }
+
+   default:
+     break;
+  }
+  return possible;
 }
 
 /******************************************************************************
@@ -512,47 +511,64 @@ void Chess::Game::display()
  * 
  * - move a piece to a new location within the actual _board
  *****************************************************************************/
-bool Chess::Game::move(int from_x, int from_y, int to_x, int to_y)
+void Chess::Game::move(int from_x, int from_y, int to_x, int to_y, Piece (&board)[8][8])
 {
   std::cout << "Moving { " << from_x << " , " << from_y << "}\n"
             << "to { " << to_x << " , " << to_y << "}\n";
+  
+  // copy constructor desperately needed
+  board[to_x][to_y].x = to_x;
+  board[to_x][to_y].y = to_y;
+  board[to_x][to_y].type = board[from_x][from_y].type;
+  board[to_x][to_y].color = board[from_x][from_y].color;
+  board[to_x][to_y].icon = board[from_x][from_y].icon;
+  board[to_x][to_y].has_moved = true; 
 
-  // check if the piece can move in this way
-  if (!resultsInCheck(from_x, from_y, to_x, to_y)) {
-    //copy constructor desperately needed
-    _board[to_x][to_y].x = to_x;
-    _board[to_x][to_y].y = to_y;
-    _board[to_x][to_y].type = _board[from_x][from_y].type;
-    _board[to_x][to_y].color = _board[from_x][from_y].color;
-    _board[to_x][to_y].icon = _board[from_x][from_y].icon;
-    _board[to_x][to_y].has_moved = true; 
-
-    _board[from_x][from_y].Clear();
-    std::cout << "VALID\n";
-    return true;
-  }
-
-  std::cout << "**INVALID\n";
-  return false;
+  board[from_x][from_y].Clear();
 }
 
 /******************************************************************************
  *
  * Method: Game::resultsInCheck()
+ * -- given a proposed move, see if that move results in check
+ *    for the same color piece
  *
  *****************************************************************************/
 bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
 {
-  return false;
-}
+  
+  auto pieceColor = _board[from_x][from_y].Color();
 
-/******************************************************************************
- *
- * Method: Game::validPoint()
- *
- *****************************************************************************/
-const bool Chess::Game::validPoint(int x, int y) {
-   return (x >= 0 && x < 8) && (y >=0 && y < 8);
+  Piece local[8][8];
+  std::copy(&_board[0][0], &_board[0][0]+8*8, &local[0][0]);
+  std::vector<Point> possible;
+
+  // state of the board as if the move took place
+  move(from_x, from_y, to_x, to_y, local);
+
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j ++) {
+      if (local[i][j].Color() != pieceColor) {
+        auto piecePossible = generatePossible(local[i][j], local);
+        possible.insert(std::end(possible),std::begin(piecePossible), std::end(piecePossible));
+      }
+    }
+  }
+
+  auto getKing = [&] (auto color) {
+    for (int i = 0; i < 8; i ++) {
+      for (int j = 0; j < 8; j++) {
+        if (local[i][j].type == KING && local[i][j].Color() == color) {
+          return Point { local[i][j].x, local[i][j].y };
+        }
+      }
+    }
+    return Point {-1, -1};
+  };
+
+  auto king = getKing(pieceColor);
+
+  return containsPoint(king.x, king.y, possible) ? true : false;
 }
 
 /******************************************************************************
@@ -577,10 +593,13 @@ void Chess::Game::printBoard()
  *****************************************************************************/
 bool Chess::Game::containsPoint(int x, int y, std::vector<Point> possible)
 {
-  for (auto point : possible) {
-    if (point.x == x && point.y == y) {
-      return true;
+  if (validPoint(x,y)) {
+    for (auto point : possible) {
+      if (point.x == x && point.y == y) {
+        return true;
+      }
     }
+    return false;
   }
   return false;
 }
@@ -590,30 +609,18 @@ bool Chess::Game::containsPoint(int x, int y, std::vector<Point> possible)
  * Method: Game::rookPossible()
  *
  *****************************************************************************/
-void Chess::Game::rookPossible(Piece p)
+std::vector<Chess::Game::Point> Chess::Game::rookPossible(Piece p, Piece (&board)[8][8] )
 {
-  SDL_Rect src = {0,0, 180, 180};
+  std::vector<Point> possible;
   {
     auto x = p.x + 1;
     auto y = p.y;
     while (validPoint(x, y)) {
-      if (!_board[x][y]) {
-        SDL_Rect dest2 = { 
-                  _screenW / ROWS * y + 30,
-   	              _screenH / COLS * x + 30,
-				              20,
-				              20};
-	          SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-            _possible_moves.push_back(Point{x, y});
-            x++;
-      } else if (_board[x][y].Color() != p.Color()) {
-	      SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-				        _screenH / COLS * x + 30,
-				        20,
-				        20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      if (!board[x][y]) {
+        possible.push_back(Point{x, y});
+        x++;
+      } else if (board[x][y].Color() != p.Color()) {
+        possible.push_back(Point{x, y});
         x = -1;
       } else {
         x = -1;
@@ -625,23 +632,11 @@ void Chess::Game::rookPossible(Piece p)
     auto x = p.x - 1;
     auto y = p.y;
     while (validPoint(x, y)) {
-      if (!_board[x][y]) {
-        SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      if (!board[x][y]) {
+        possible.push_back(Point{x, y});
         x--;
-      } else if (_board[x][y].Color() != p.Color()) {
-        SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      } else if (board[x][y].Color() != p.Color()) {
+        possible.push_back(Point{x, y});
         x = -1;
       } else {
         x = -1;
@@ -653,23 +648,11 @@ void Chess::Game::rookPossible(Piece p)
     auto x = p.x;
     auto y = p.y + 1;
     while (validPoint(x, y)) {
-      if (!_board[x][y]) {
-        SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      if (!board[x][y]) {
+        possible.push_back(Point{x, y});
         y++;
-      } else if (_board[x][y].Color() != p.Color()) {
-        SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-                20,
-               20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      } else if (board[x][y].Color() != p.Color()) {
+        possible.push_back(Point{x, y});
         x = -1;
       } else {
         x = -1;
@@ -681,56 +664,33 @@ void Chess::Game::rookPossible(Piece p)
     auto x = p.x;
     auto y = p.y - 1;
     while (validPoint(x, y)) {
-      if (!_board[x][y]) {
-        SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      if (!board[x][y]) {
+        possible.push_back(Point{x, y});
         y--;
-      } else if (_board[x][y].Color() != p.Color()) {
-        SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x  + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      } else if (board[x][y].Color() != p.Color()) {
+        possible.push_back(Point{x, y});
         x = -1;
       } else {
         x = -1;
       }
     }
   }
+  return possible;
 }
 
-void Chess::Game::bishopPossible(Piece p)
+std::vector<Chess::Game::Point> Chess::Game::bishopPossible(Piece p, Piece (&board)[8][8] )
 {
-  SDL_Rect src = {0,0, 180, 180};
+  std::vector<Point> possible;
   {
     auto x = p.x + 1;
     auto y = p.y + 1;
     while (validPoint(x, y)) {
-      if (!_board[x][y]) {
-        SDL_Rect dest2 = { 
-                  _screenW / ROWS * y + 30,
-  	              _screenH / COLS * x + 30,
-		              20,
-		              20};
-	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      if (!board[x][y]) {
+        possible.push_back(Point{x, y});
         x++;
         y++;
-      } else if (_board[x][y].Color() != p.Color()) {
-	      SDL_Rect dest2 = { 
-                  _screenW / ROWS * y + 30,
-	                _screenH / COLS * x + 30,
-	                20,
-		              20};
-	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      } else if (board[x][y].Color() != p.Color()) {
+        possible.push_back(Point{x, y});
         x = -1;
       } else {
         x = -1;
@@ -742,24 +702,12 @@ void Chess::Game::bishopPossible(Piece p)
     auto x = p.x - 1;
     auto y = p.y - 1;
     while (validPoint(x, y)) {
-      if (!_board[x][y]) {
-	      SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      if (!board[x][y]) {
+        possible.push_back(Point{x, y});
         x--;
         y--;
-      } else if (_board[x][y].Color() != p.Color()) {
-        SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      } else if (board[x][y].Color() != p.Color()) {
+        possible.push_back(Point{x, y});
         x = -1;
       } else {
         x = -1;
@@ -771,24 +719,12 @@ void Chess::Game::bishopPossible(Piece p)
     auto x = p.x - 1;
     auto y = p.y + 1;
     while (validPoint(x, y)) {
-      if (!_board[x][y]) {
-	      SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-		            _screenH / COLS * x + 30,
-		            20,
-		            20};
-	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      if (!board[x][y]) {
+        possible.push_back(Point{x, y});
         y++;
         x--;
-      } else if (_board[x][y].Color() != p.Color()) {
-	      SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-		            _screenH / COLS * x + 30,
-		            20,
-		            20};
-	      SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      } else if (board[x][y].Color() != p.Color()) {
+        possible.push_back(Point{x, y});
         x = -1;
       } else {
         x = -1;
@@ -800,28 +736,17 @@ void Chess::Game::bishopPossible(Piece p)
     auto x = p.x + 1;
     auto y = p.y - 1;
     while (validPoint(x, y)) {
-      if (!_board[x][y]) {
-        SDL_Rect dest2 = {
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      if (!board[x][y]) {
+        possible.push_back(Point{x, y});
         y--;
         x++;
-      } else if (_board[x][y].Color() != p.Color()) {
-        SDL_Rect dest2 = { 
-                _screenW / ROWS * y + 30,
-	              _screenH / COLS * x + 30,
-	              20,
-	              20};
-        SDL_RenderCopy(_renderer, _circleTexture, &src, &dest2);
-        _possible_moves.push_back(Point{x, y});
+      } else if (board[x][y].Color() != p.Color()) {
+        possible.push_back(Point{x, y});
         x = -1;
       } else {
         x = -1;
       }
     }
   }
+  return possible;
 }

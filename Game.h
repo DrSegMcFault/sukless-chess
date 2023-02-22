@@ -52,7 +52,7 @@ class Game {
 
     bool _has_render_auth = true;
 
-    bool move(int from_x, int from_y, int to_x, int to_y);
+    void move(int from_x, int from_y, int to_x, int to_y, Piece (&b)[8][8]);
 
     void display();
 
@@ -61,12 +61,17 @@ class Game {
     SDL_Texture* loadTexture(const char* filepath);
     bool resultsInCheck(int from_x, int from_y, int to_x, int to_y);
     void renderBackground();
-    void renderPossible(Piece p);
+    std::vector<Point> generatePossible(Piece p, Piece (&b)[8][8]);
+    void renderPossible();
     void printBoard();
-    const bool validPoint(int x, int y);
+
+    constexpr bool validPoint(int x, int y) const {
+      return (x >= 0 && x < 8) && (y >=0 && y < 8);
+    }
+
     bool containsPoint(int x, int y, std::vector<Point> possible);
-    void rookPossible(Piece p);
-    void bishopPossible(Piece p);
+    std::vector<Point> rookPossible(Piece p, Piece (&b)[8][8]);
+    std::vector<Point> bishopPossible(Piece p, Piece (&b)[8][8]);
 };
 
 } // namespace chess

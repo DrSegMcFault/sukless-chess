@@ -349,8 +349,9 @@ std::vector<Chess::Game::Point> Chess::Game::generatePossible(Chess::Piece p, Pi
    }
 
    case ROOK:
-   {
-     rookPossible(p, board);
+   { 
+      auto rook = rookPossible(p, board);
+      possible.insert(std::end(possible), std::begin(rook), std::end(rook));
      break;
    }
 

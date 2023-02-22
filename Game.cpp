@@ -263,6 +263,21 @@ void Chess::Game::renderPossible(Piece p)
 
  auto mod = p.color == WHITE ? 1 : -1;
 
+ // determine if we should render a peice given x y
+ // using the condition that the king and knight use
+ auto knightKing = [&] (auto x, auto y) {
+   if (validPoint(x,y)) {
+      if (!_board[x][y] || (_board[x][y] && _board[x][y].Color() != p.Color())) {
+           SDL_Rect dest = {
+                _screenW / ROWS * y + 30,
+			          _screenH / COLS * x + 30,
+				        20,
+				        20};
+          SDL_RenderCopy(_renderer, texture, &src, &dest);
+          _possible_moves.push_back(Point{x, y});
+      }
+    }
+ };
  // rendering a bunch of stuff out of bounds!!
  if (texture) {
    switch (p.type){
@@ -319,12 +334,105 @@ void Chess::Game::renderPossible(Piece p)
 
     case KING:
     {
+      {
+        auto x = p.x - 1;
+        auto y = p.y - 1;
+        knightKing(x, y);
+      }
+
+      {
+        auto x = p.x;
+        auto y = p.y - 1;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x + 1;
+        auto y = p.y - 1;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x + 1;
+        auto y = p.y;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x - 1;
+        auto y = p.y;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x - 1;
+        auto y = p.y + 1;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x;
+        auto y = p.y + 1;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x + 1;
+        auto y = p.y + 1;
+        knightKing(x,y);
+      }
       break;
     }
 
     case KNIGHT:
     {
-      // will be hard coded
+      {
+        auto x = p.x - 2;
+        auto y = p.y + 1;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x - 2;
+        auto y = p.y - 1;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x - 1;
+        auto y = p.y - 2;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x + 1;
+        auto y = p.y - 2;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x + 2;
+        auto y = p.y - 1;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x + 2;
+        auto y = p.y + 1;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x + 1;
+        auto y = p.y + 2;
+        knightKing(x,y);
+      }
+
+      {
+        auto x = p.x - 1;
+        auto y = p.y + 2;
+        knightKing(x,y);
+      }
       break;
     }
 
@@ -417,7 +525,7 @@ bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
   return false;
 }
 
-bool validPoint(int x, int y) {
+const bool Chess::Game::validPoint(int x, int y) {
    return (x >= 0 && x < 8) && (y >=0 && y < 8);
 }
 

@@ -34,8 +34,8 @@ Chess::Game::Game()
   }
 
   // doing this here saves me a couple MB of ram
-  p_textures.insert({"/resources/pawn-white.png", loadTexture("/resources/pawn-white.png") });
-  p_textures.insert({"/resources/pawn-black.png", loadTexture("/resources/pawn-black.png") });
+  p_textures.insert({"/resources/pawn_white.png", loadTexture("/resources/pawn_white.png") });
+  p_textures.insert({"/resources/pawn_black.png", loadTexture("/resources/pawn_black.png") });
 
   // zero the _board
   for (int i = 0; i < ROWS; i++) {

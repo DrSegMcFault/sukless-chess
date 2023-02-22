@@ -60,6 +60,7 @@ class Game {
     void renderBackground();
     void renderPossible(Piece p);
     void printBoard();
+    const bool validPoint(int x, int y);
     bool containsPoint(int x, int y, std::vector<Point> possible);
     void rookPossible(Piece p, SDL_Texture* t);
     void bishopPossible(Piece p, SDL_Texture* t);

@@ -116,12 +116,12 @@ SDL_Texture* Chess::Game::loadTexture(const char* filepath)
  *****************************************************************************/
 void Chess::Game::renderPiece(SDL_Texture* texture, Piece p)
 {
-  SDL_Rect src = {0, 0, 451, 451};
+  SDL_Rect src = {0, 0, 80, 80};
 	SDL_Rect dest = { 
-                    _screenW / ROWS * p.y,
-					          _screenH / COLS * p.x,
-					          _screenW / ROWS,
-					          _screenH / COLS };
+                    _screenW / ROWS * p.y + 5,
+					          _screenH / COLS * p.x + 5,
+					          _screenW / ROWS - 10,
+					          _screenH / COLS - 10};
   SDL_RenderCopy(_renderer, texture, &src, &dest);
 }
 
@@ -134,7 +134,6 @@ void Chess::Game::run()
 {
   //cached piece that has been previously clicked
   std::optional<Piece> clicked;
-  std::vector<Point> possible_moves;
   // main loop
   while (_state.game != GameState::EXIT) {
 
@@ -157,7 +156,7 @@ void Chess::Game::run()
         auto y = ev.button.y;
         int grid_x = floor(x / (_screenH / COLS));
         int grid_y = floor(y / (_screenW / ROWS));
-        
+
         // investigate if this can be removed
         if (x <= _screenW && y <= _screenH) {
           // get the piece that was clicked on
@@ -172,7 +171,7 @@ void Chess::Game::run()
                 // stop rendering here and render the board, pieces,
                 // and possible moves with renderPossible
                 _has_render_auth = false;
-                possible_moves = renderPossible(_board[grid_y][grid_x]);
+                renderPossible(_board[grid_y][grid_x]);
               }
             }
 
@@ -182,13 +181,13 @@ void Chess::Game::run()
                 clicked.value().color == Color::BLACK && !_state.isWhiteTurn)
             {
               // if the coordindates are in the list of possible moves
-              // and doesnt result in check for the SAME color
-              // then move. would be grid_y, grid_x
-              if (containsPoint(grid_y, grid_x, possible_moves)) {
+              // and doesnt result in check for the SAME color,
+              // then move.
+              if (containsPoint(grid_y, grid_x, _possible_moves)) {
                 move(clicked.value().x, clicked.value().y, grid_y, grid_x);
                 _state.isWhiteTurn = !_state.isWhiteTurn;
                 _has_render_auth = true;
-                possible_moves.clear();
+                _possible_moves.clear();
               }
             }
 
@@ -240,7 +239,7 @@ void Chess::Game::renderBackground()
  * - find and display the possible moves, return the list of coordinates
  *   that are valid for the piece to move to
  *****************************************************************************/
-std::vector<Chess::Game::Point> Chess::Game::renderPossible(Piece p)
+void Chess::Game::renderPossible(Piece p)
 {
  SDL_RenderClear(_renderer);
 
@@ -258,85 +257,96 @@ std::vector<Chess::Game::Point> Chess::Game::renderPossible(Piece p)
     }
    }
 
- // Display what we copied into the renderer
  auto* texture = loadTexture("resources/circle.png");
- std::vector<Point> possible_moves;
+
+ SDL_Rect src = {0,0, 180, 180};
+
+ auto mod = p.color == WHITE ? 1 : -1;
+
+ // rendering a bunch of stuff out of bounds!!
  if (texture) {
-  switch(p.type){
-    case PAWN:
-    {
-        SDL_Rect src = {0,0, 180, 180};
-        auto mod = p.color == WHITE ? 1 : -1;
-        // if there isnt a piece in front of the pawn, its possible
-        if (!_board[p.x - mod][p.y]) {
-	        SDL_Rect dest = { 
+   switch (p.type){
+     case PAWN:
+     {
+       // if there isnt a piece in front of the pawn, its possible
+       if (!_board[p.x - mod][p.y]) {
+         SDL_Rect dest = { 
                     _screenW / ROWS * p.y + 30 , 
 					          _screenH / COLS * (p.x - mod)  + 30,
 					          20,
 					          20};
-	        SDL_RenderCopy(_renderer, texture, &src, &dest);
-          possible_moves.push_back(Point{p.x - mod, p.y});
-        }
+         SDL_RenderCopy(_renderer, texture, &src, &dest);
+         _possible_moves.push_back(Point{p.x - mod, p.y});
+       }
 
-        if (_board[p.x - mod][p.y - mod] && p.color != _board[p.x-mod][p.y-mod].color) {
-	        SDL_Rect dest = { 
-                    _screenW / ROWS * (p.y - mod) + 30, 
-					          _screenH / COLS * (p.x - mod)  + 30,
-					          20,
-					          20};
-	        SDL_RenderCopy(_renderer, texture, &src, &dest);
-          possible_moves.push_back(Point{p.x - mod, p.y - mod});
-        }
+       if (_board[p.x - mod][p.y - mod] && p.color != _board[p.x-mod][p.y-mod].color) {
+	       SDL_Rect dest = { 
+                   _screenW / ROWS * (p.y - mod) + 30,
+		   	           _screenH / COLS * (p.x - mod)  + 30,
+			             20,
+			             20};
+ 	       SDL_RenderCopy(_renderer, texture, &src, &dest);
+         _possible_moves.push_back(Point{p.x - mod, p.y - mod});
+       }
 
-        if (_board[p.x - mod][p.y + mod] && p.Color() != _board[p.x-mod][p.y+mod].Color()) {
-	        SDL_Rect dest = { 
-                    _screenW / ROWS * (p.y + mod) + 30, 
-					          _screenH / COLS * (p.x - mod) + 30,
-					          20,
-					          20};
-	        SDL_RenderCopy(_renderer, texture, &src, &dest);
-          possible_moves.push_back(Point{p.x - mod, p.y + mod});
-        }
+       if (_board[p.x - mod][p.y + mod] && p.Color() != _board[p.x-mod][p.y+mod].Color()) {
+	       SDL_Rect dest = { 
+                  _screenW / ROWS * (p.y + mod) + 30,
+			            _screenH / COLS * (p.x - mod) + 30,
+				          20,
+				          20};
+	       SDL_RenderCopy(_renderer, texture, &src, &dest);
+         _possible_moves.push_back(Point{p.x - mod, p.y + mod});
+       }
 
-        if (!p.has_moved && !_board[p.x - mod*2][p.y]) {
-	        SDL_Rect dest2 = { 
-                    _screenW / ROWS * p.y + 30 , 
-					          _screenH / COLS * (p.x - mod*2)  + 30,
-					          20,
-					          20};
-	        SDL_RenderCopy(_renderer, texture, &src, &dest2);
-          possible_moves.push_back(Point{p.x - mod*2, p.y});
-        }
+      if (!p.has_moved && !_board[p.x - mod*2][p.y]) {
+	      SDL_Rect dest2 = { 
+                  _screenW / ROWS * p.y + 30,
+				          _screenH / COLS * (p.x - mod*2)  + 30,
+				          20,
+				          20};
+	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{p.x - mod*2, p.y});
+      }
       break;
     }
+
     case ROOK:
     {
+      rookPossible(p, texture);
       break;
     }
+
     case KING:
     {
       break;
     }
+
     case KNIGHT:
     {
+      // will be hard coded
       break;
     }
+
     case BISHOP:
     {
+      bishopPossible(p, texture);
       break;
     }
+
     case QUEEN:
     {
+      bishopPossible(p, texture);
+      rookPossible(p, texture);
       break;
     }
+
     default:
       break;
   }
 
   SDL_RenderPresent(_renderer);
  }
-
- return possible_moves;
 }
 
 /******************************************************************************
@@ -379,21 +389,20 @@ bool Chess::Game::move(int from_x, int from_y, int to_x, int to_y)
             << "to { " << to_x << " , " << to_y << "}\n";
 
   // check if the piece can move in this way
-  if (_board[from_x][from_y].isValidMove(to_x, to_y)) {
-    if (!resultsInCheck(from_x, from_y, to_x, to_y)) {
-      //copy constructor desperately needed
-      _board[to_x][to_y].x = to_x;
-      _board[to_x][to_y].y = to_y;
-      _board[to_x][to_y].type = _board[from_x][from_y].type;
-      _board[to_x][to_y].color = _board[from_x][from_y].color;
-      _board[to_x][to_y].icon = _board[from_x][from_y].icon;
-      _board[to_x][to_y].has_moved = true; 
+  if (!resultsInCheck(from_x, from_y, to_x, to_y)) {
+    //copy constructor desperately needed
+    _board[to_x][to_y].x = to_x;
+    _board[to_x][to_y].y = to_y;
+    _board[to_x][to_y].type = _board[from_x][from_y].type;
+    _board[to_x][to_y].color = _board[from_x][from_y].color;
+    _board[to_x][to_y].icon = _board[from_x][from_y].icon;
+    _board[to_x][to_y].has_moved = true; 
 
-      _board[from_x][from_y].Clear();
-      std::cout << "VALID\n";
-      return true;
-    }
+    _board[from_x][from_y].Clear();
+    std::cout << "VALID\n";
+    return true;
   }
+
   std::cout << "**INVALID\n";
   return false;
 }
@@ -406,6 +415,10 @@ bool Chess::Game::move(int from_x, int from_y, int to_x, int to_y)
 bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
 {
   return false;
+}
+
+bool validPoint(int x, int y) {
+   return (x >= 0 && x < 8) && (y >=0 && y < 8);
 }
 
 /******************************************************************************
@@ -436,4 +449,245 @@ bool Chess::Game::containsPoint(int x, int y, std::vector<Point> possible)
     }
   }
   return false;
+}
+
+/******************************************************************************
+ *
+ * Method: Game::rookPossible()
+ *
+ *****************************************************************************/
+void Chess::Game::rookPossible(Piece p, SDL_Texture* texture)
+{
+  SDL_Rect src = {0,0, 180, 180};
+  {
+    auto x = p.x + 1;
+    auto y = p.y;
+    while (validPoint(x, y)) {
+      if (!_board[x][y]) {
+        SDL_Rect dest2 = { 
+                  _screenW / ROWS * y + 30,
+   	              _screenH / COLS * x + 30,
+				              20,
+				              20};
+	          SDL_RenderCopy(_renderer, texture, &src, &dest2);
+            _possible_moves.push_back(Point{x, y});
+            x++;
+      } else if (_board[x][y].Color() != p.Color()) {
+	      SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+				        _screenH / COLS * x + 30,
+				        20,
+				        20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x = -1;
+      } else {
+        x = -1;
+      }
+    }
+  }
+
+  {
+    auto x = p.x - 1;
+    auto y = p.y;
+    while (validPoint(x, y)) {
+      if (!_board[x][y]) {
+        SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x--;
+      } else if (_board[x][y].Color() != p.Color()) {
+        SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x = -1;
+      } else {
+        x = -1;
+      }
+    }
+  }
+
+  {
+    auto x = p.x;
+    auto y = p.y + 1;
+    while (validPoint(x, y)) {
+      if (!_board[x][y]) {
+        SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        y++;
+      } else if (_board[x][y].Color() != p.Color()) {
+        SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+                20,
+               20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x = -1;
+      } else {
+        x = -1;
+      }
+    }
+  }
+
+  {
+    auto x = p.x;
+    auto y = p.y - 1;
+    while (validPoint(x, y)) {
+      if (!_board[x][y]) {
+        SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        y--;
+      } else if (_board[x][y].Color() != p.Color()) {
+        SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x  + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x = -1;
+      } else {
+        x = -1;
+      }
+    }
+  }
+}
+
+void Chess::Game::bishopPossible(Piece p, SDL_Texture* texture)
+{
+  SDL_Rect src = {0,0, 180, 180};
+  {
+    auto x = p.x + 1;
+    auto y = p.y + 1;
+    while (validPoint(x, y)) {
+      if (!_board[x][y]) {
+        SDL_Rect dest2 = { 
+                  _screenW / ROWS * y + 30,
+  	              _screenH / COLS * x + 30,
+		              20,
+		              20};
+	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x++;
+        y++;
+      } else if (_board[x][y].Color() != p.Color()) {
+	      SDL_Rect dest2 = { 
+                  _screenW / ROWS * y + 30,
+	                _screenH / COLS * x + 30,
+	                20,
+		              20};
+	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x = -1;
+      } else {
+        x = -1;
+      }
+    }
+  }
+
+  {
+    auto x = p.x - 1;
+    auto y = p.y - 1;
+    while (validPoint(x, y)) {
+      if (!_board[x][y]) {
+	      SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x--;
+        y--;
+      } else if (_board[x][y].Color() != p.Color()) {
+        SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x = -1;
+      } else {
+        x = -1;
+      }
+    }
+  }
+
+  {
+    auto x = p.x - 1;
+    auto y = p.y + 1;
+    while (validPoint(x, y)) {
+      if (!_board[x][y]) {
+	      SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+		            _screenH / COLS * x + 30,
+		            20,
+		            20};
+	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        y++;
+        x--;
+      } else if (_board[x][y].Color() != p.Color()) {
+	      SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+		            _screenH / COLS * x + 30,
+		            20,
+		            20};
+	      SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x = -1;
+      } else {
+        x = -1;
+      }
+    }
+  }
+
+  {
+    auto x = p.x + 1;
+    auto y = p.y - 1;
+    while (validPoint(x, y)) {
+      if (!_board[x][y]) {
+        SDL_Rect dest2 = {
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        y--;
+        x++;
+      } else if (_board[x][y].Color() != p.Color()) {
+        SDL_Rect dest2 = { 
+                _screenW / ROWS * y + 30,
+	              _screenH / COLS * x + 30,
+	              20,
+	              20};
+        SDL_RenderCopy(_renderer, texture, &src, &dest2);
+        _possible_moves.push_back(Point{x, y});
+        x = -1;
+      } else {
+        x = -1;
+      }
+    }
+  }
 }

@@ -41,6 +41,7 @@ class Game {
       int x = 0;
       int y = 0;
     };
+    std::vector<Point> _possible_moves;
 
     State _state;
 
@@ -57,9 +58,11 @@ class Game {
     // helper functions
     bool resultsInCheck(int from_x, int from_y, int to_x, int to_y);
     void renderBackground();
-    std::vector<Point> renderPossible(Piece p);
+    void renderPossible(Piece p);
     void printBoard();
     bool containsPoint(int x, int y, std::vector<Point> possible);
+    void rookPossible(Piece p, SDL_Texture* t);
+    void bishopPossible(Piece p, SDL_Texture* t);
 };
 
 } // namespace chess

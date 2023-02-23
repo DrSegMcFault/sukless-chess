@@ -133,7 +133,34 @@ SDL_Texture* Chess::Game::loadTexture(const char* filepath)
  * Method: Game::renderPiece()
  *
  *****************************************************************************/
-void Chess::Game::renderPiece(SDL_Texture* texture, Piece p)
+bool Chess::Game::isCheckmate()
+{
+  auto cur_player_color = _state.isWhiteTurn ? WHITE : BLACK;
+  
+  // check if all the possible moves for the current player result in check
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      auto piece = _board[i][j];
+      if (piece && piece.Color() == cur_player_color) {
+        auto this_piece_possible = generatePossible(piece, _board);
+        for (auto point : this_piece_possible) {
+          if (!resultsInCheck(piece.x, piece.y, point.x, point.y)) {
+            return false; 
+          }
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+/******************************************************************************
+ *
+ * Method: Game::renderPiece()
+ *
+ *****************************************************************************/
+void Chess::Game::renderPiece(SDL_Texture *texture, Piece p)
 {
   SDL_Rect src = {0, 0, 80, 80};
 	SDL_Rect dest = { 
@@ -160,7 +187,7 @@ void Chess::Game::run()
 
   while (_state.game != GameState::EXIT) {
 
-    SDL_RenderClear(_renderer);
+    // render the first frame
     if (first) {
       display();
       first = false;
@@ -195,10 +222,6 @@ void Chess::Game::run()
                   this_piece.Color() == BLACK && !_state.isWhiteTurn)
               {
                 clicked = this_piece;
-                // stop rendering here and render the board, pieces,
-                // and possible moves with renderPossible
-                //_has_render_auth = false;
-
                 _possible_moves = generatePossible(_board[grid_y][grid_x], _board);
                 renderPossible();
               }
@@ -218,13 +241,18 @@ void Chess::Game::run()
                                   grid_y, grid_x)) 
               {
                 move(clicked.value().x, clicked.value().y, grid_y, grid_x, _board);
+                _move_count++;
                 _state.isWhiteTurn = !_state.isWhiteTurn;
-                //_has_render_auth = true;
+                // check for checkmate
+                if (isCheckmate()) {
+                 _state.game = GameState::EXIT; 
+                }
+
                 _possible_moves.clear();
+
+                display();
               }
 
-              SDL_RenderClear(_renderer);
-              display();
             }
 
             clicked.reset(); 

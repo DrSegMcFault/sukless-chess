@@ -23,7 +23,7 @@ Chess::Game::Game()
 
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
-  auto* surface = IMG_Load("/resources/circle.png");
+  auto* surface = IMG_Load("../resources/circle.png");
 
   if (surface) {
     _circleTexture = SDL_CreateTextureFromSurface(_renderer, surface);
@@ -34,8 +34,8 @@ Chess::Game::Game()
   }
 
   // doing this here saves me a couple MB of ram
-  p_textures.insert({"/resources/pawn_white.png", loadTexture("/resources/pawn_white.png") });
-  p_textures.insert({"/resources/pawn_black.png", loadTexture("/resources/pawn_black.png") });
+  p_textures.insert({"../resources/pawn_white.png", loadTexture("../resources/pawn_white.png") });
+  p_textures.insert({"../resources/pawn_black.png", loadTexture("../resources/pawn_black.png") });
 
   // zero the _board
   for (int i = 0; i < ROWS; i++) {
@@ -352,7 +352,8 @@ std::vector<Chess::Game::Point> Chess::Game::generatePossible(Chess::Piece p, Pi
    { 
       auto rook = rookPossible(p, board);
       possible.insert(std::end(possible), std::begin(rook), std::end(rook));
-     break;
+      rookPossible(p, board);
+      break;
    }
 
    case KING:

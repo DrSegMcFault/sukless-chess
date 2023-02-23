@@ -10,11 +10,11 @@ namespace Chess {
 
   class Piece {
     private:
-      std::string prefixPath = "/resources/";
+      std::string prefixPath = "../resources/";
 
     public:
       std::string icon = "";
-      Color color = C_NONE;
+      Chess::Color color = C_NONE;
       PieceType type = NONE;
       bool has_moved = false;
 
@@ -49,7 +49,7 @@ namespace Chess {
 
       constexpr auto Icon() { return icon.c_str(); };
 
-      constexpr auto Color() { return color; };
+      constexpr Chess::Color Color() { return color; };
       
       constexpr void Clear() { type = NONE; color = C_NONE; x = -1; y = -1;}
 

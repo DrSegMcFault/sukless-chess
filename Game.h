@@ -31,6 +31,8 @@ class Game {
     SDL_Renderer* _renderer;
 
     Piece _board[ROWS][COLS];
+
+    uint8_t _move_count = 0;
     
     std::map<std::string, SDL_Texture*> p_textures; 
     
@@ -50,13 +52,12 @@ class Game {
 
     State _state;
 
-    bool _has_render_auth = true;
-
     void move(int from_x, int from_y, int to_x, int to_y, Piece (&b)[8][8]);
 
     void display();
 
     // helper functions
+    bool isCheckmate();
     void renderPiece(SDL_Texture* txture, Piece p);
     SDL_Texture* loadTexture(const char* filepath);
     bool resultsInCheck(int from_x, int from_y, int to_x, int to_y);

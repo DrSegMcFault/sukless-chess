@@ -2,7 +2,7 @@
 The goal of this project is to provide a feature-rich yet minimalistic implementation of chess.
 ## vcpkg is highly reccomended
 1. install vcpkg and the relavent triplet
-2. ./vcpkg install sdl2 sdl2-image
+2. ./vcpkg install sdl2:<your-triplet> sdl2-image:<your-triplet> sdl2-mixer:<your triplet>
 
 ## build
 ```
@@ -10,3 +10,14 @@ The goal of this project is to provide a feature-rich yet minimalistic implement
  cd <build-directory>
  make
  ```
+ ## Run
+ ### MacOS
+ 
+```
+cd <build-dir> ./chess
+```
+### Windows
+```
+cd <build-dir> ./Debug/chess
+```
+*do your shells equivalent of the bash ``` ./ ```

@@ -3,7 +3,19 @@ The goal of this project is to provide a feature-rich yet minimalistic implement
 ## vcpkg is highly reccomended
 1. install vcpkg and the relavent triplet
 ```
-./vcpkg install sdl2:<your-triplet> sdl2-image:<your-triplet> sdl2-mixer:<your triplet>
+git clone https://github.com/microsoft/vcpkg
+
+windows:
+.\vcpkg\bootstrap-vcpkg.bat
+
+MacOS and Linux
+./vcpkg/bootstrap-vcpkg.sh
+
+All platforms from here
+
+./vcpkg install sdl2 sdl2-image sdl2-mixer --triplet <your-triplet>
+
+./vcpkg integrate install
 ```
 ## Build
 ```

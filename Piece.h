@@ -17,7 +17,6 @@ namespace Chess {
       Chess::Color color = C_NONE;
       PieceType type = NONE;
       bool has_moved = false;
-      bool en_passant = false;
 
       int x = 0;
       int y = 0;

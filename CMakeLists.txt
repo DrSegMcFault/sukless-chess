@@ -9,25 +9,9 @@ add_executable(chess)
 target_sources(chess PRIVATE main.cpp Piece.cpp Game.cpp)
 
 find_package(SDL2 CONFIG REQUIRED)
+find_package(sdl2-image CONFIG REQUIRED)
 find_package(SDL2_mixer CONFIG REQUIRED)
 
-IF (WIN32)
-
-  find_package(SDL2_image CONFIG REQUIRED)
-  target_link_libraries(chess
-        PRIVATE
-        $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-        $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-    )
-  target_link_libraries(chess PRIVATE $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>)
-
-ELSE()
-
-  find_package(sdl2-image CONFIG REQUIRED)
-
-  target_link_libraries(chess PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static SDL2::SDL2_image)
-
-ENDIF()
-
+target_link_libraries(chess PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static SDL2::SDL2_image)
 target_link_libraries(chess PRIVATE $<IF:$<TARGET_EXISTS:SDL2_mixer::SDL2_mixer>,SDL2_mixer::SDL2_mixer,SDL2_mixer::SDL2_mixer-static>)
 file(COPY resources DESTINATION ${PROJECT_BINARY_DIR})

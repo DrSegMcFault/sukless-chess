@@ -433,9 +433,47 @@ std::vector<Chess::Game::Point> Chess::Game::generatePossible(Chess::Piece p, Pi
        auto y = p.y + 1;
        knightKing(x,y);
      }
-     break;
-   }
 
+     {
+       // castling
+       // if the king hasnt moved
+       if (!p.has_moved) {
+         // if im not already in check
+         if (!resultsInCheck(p.x, p.y, p.x, p.y)) {
+           if (board[p.x][p.y + 3] &&
+               board[p.x][p.y + 3].type == ROOK &&
+               !board[p.x][p.y + 3].has_moved)
+           {
+             // if traveling to either of the next to squares dont result in check
+             if (!board[p.x][p.y + 1] && !resultsInCheck(p.x, p.y, p.x, p.y + 1)) {
+               if (!board[p.x][p.y + 2] && !resultsInCheck(p.x, p.y, p.x, p.y + 2)) {
+                 possible.push_back(Point {p.x, p.y + 2});
+               }
+             }
+           }
+         }
+
+         // queen side castle
+         // if im not already in check
+         if (!resultsInCheck(p.x, p.y, p.x, p.y)) {
+           if (board[p.x][p.y - 4] &&
+               board[p.x][p.y - 4].type == ROOK &&
+               !board[p.x][p.y - 4].has_moved)
+           {
+             // if traveling to either of the next to squares dont result in check
+             if (!board[p.x][p.y - 1] && !resultsInCheck(p.x, p.y, p.x, p.y - 1)) {
+               if (!board[p.x][p.y - 2] && !resultsInCheck(p.x, p.y, p.x, p.y - 2)) {
+                 if (!board[p.x][p.y - 3]) {
+                   possible.push_back(Point {p.x, p.y - 2});
+                 }
+               }
+             }
+           }
+         }
+       }
+     }
+     break;
+   }   
    case KNIGHT:
    {
      {
@@ -543,9 +581,18 @@ void Chess::Game::display()
  *****************************************************************************/
 void Chess::Game::move(int from_x, int from_y, int to_x, int to_y, Piece (&board)[8][8])
 {
+  if (from_x == to_x && from_y == to_y) {
+    return;
+  }
+
   std::cout << "Moving { " << from_x << " , " << from_y << "}\n"
             << "to { " << to_x << " , " << to_y << "}\n";
   
+  
+  auto dx = abs(to_x - from_x);
+  auto dy = abs(to_y - from_y);
+  bool is_castle = dy == 2 && board[from_x][from_y].type == KING;
+
   // copy constructor desperately needed
   board[to_x][to_y].x = to_x;
   board[to_x][to_y].y = to_y;
@@ -553,10 +600,27 @@ void Chess::Game::move(int from_x, int from_y, int to_x, int to_y, Piece (&board
   board[to_x][to_y].color = board[from_x][from_y].color;
   board[to_x][to_y].icon = board[from_x][from_y].icon;
   board[to_x][to_y].has_moved = true; 
-
   board[from_x][from_y].Clear();
-}
 
+  
+  if (is_castle) {
+    auto dx = to_x - from_x;
+    auto dy = to_y - from_y;
+    auto king_x = to_x;
+    auto king_y = to_y;
+
+    // if the difference in x is positive, its a king side castle
+    // generatePossible will handle if this has happened before
+    if (dy > 0) {
+      move(king_x, king_y + 1, king_x, king_y - 1, board);
+    } else {
+      // queen side castle
+      move(king_x, king_y - 2, king_x, king_y + 1, board);
+    } 
+   
+
+  }
+}
 /******************************************************************************
  *
  * Method: Game::resultsInCheck()
@@ -566,7 +630,6 @@ void Chess::Game::move(int from_x, int from_y, int to_x, int to_y, Piece (&board
  *****************************************************************************/
 bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
 {
-  
   auto pieceColor = _board[from_x][from_y].Color();
 
   Piece local[8][8];
@@ -579,8 +642,12 @@ bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j ++) {
       if (local[i][j].Color() != pieceColor) {
-        auto piecePossible = generatePossible(local[i][j], local);
-        possible.insert(std::end(possible),std::begin(piecePossible), std::end(piecePossible));
+        if (local[i][j].type != KING) {
+          auto piecePossible = generatePossible(local[i][j], local);
+          possible.insert(std::end(possible),
+                          std::begin(piecePossible),
+                          std::end(piecePossible));
+        }
       }
     }
   }

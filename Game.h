@@ -65,13 +65,16 @@ class Game {
     SDL_Texture* loadTexture(const char* filepath);
     bool resultsInCheck(int from_x, int from_y, int to_x, int to_y);
     void renderBackground();
-    std::vector<Point> generatePossible(Piece p, Piece (&b)[8][8]);
+    std::vector<Point> genPossibleMvPiece(Piece p, Piece (&b)[8][8]);
+    std::vector<Point> genAllPossibleOpposing(Color c, Piece (&b)[8][8]);
     void renderPossible();
 
     constexpr bool validPoint(int x, int y) const {
       return (x >= 0 && x < 8) && (y >=0 && y < 8);
     }
     void reset();
+    Point getKing(Color c, Piece (&b)[8][8]);
+
     bool containsPoint(int x, int y, std::vector<Point> possible);
     std::vector<Point> rookPossible(Piece p, Piece (&b)[8][8]);
     std::vector<Point> bishopPossible(Piece p, Piece (&b)[8][8]);

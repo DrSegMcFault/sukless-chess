@@ -151,7 +151,7 @@ bool Chess::Game::isCheckmate()
     for (int j = 0; j < 8; j++) {
       auto piece = _board[i][j];
       if (piece && piece.Color() == cur_player_color) {
-        auto this_piece_possible = generatePossible(piece, _board);
+        auto this_piece_possible = genPossibleMvPiece(piece, _board);
         for (auto point : this_piece_possible) {
           if (!resultsInCheck(piece.x, piece.y, point.x, point.y)) {
             return false; 
@@ -231,7 +231,7 @@ void Chess::Game::run()
                   this_piece.Color() == BLACK && !_state.isWhiteTurn)
               {
                 clicked = this_piece;
-                _possible_moves = generatePossible(_board[grid_y][grid_x], _board);
+                _possible_moves = genPossibleMvPiece(this_piece, _board);
                 renderPossible();
               }
             }
@@ -354,7 +354,7 @@ void Chess::Game::renderPossible()
  * 
  * - display the possible moves
  *****************************************************************************/
-std::vector<Chess::Game::Point> Chess::Game::generatePossible(Chess::Piece p, Piece (&board)[8][8] )
+std::vector<Chess::Game::Point> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (&board)[8][8] )
 {
   std::vector<Point> possible;
   auto mod = p.color == Chess::WHITE ? 1 : -1;
@@ -403,7 +403,7 @@ std::vector<Chess::Game::Point> Chess::Game::generatePossible(Chess::Piece p, Pi
      {
        auto x = p.x - 1;
        auto y = p.y - 1;
-       knightKing(x, y);
+       knightKing(x,y);
      }
 
      {
@@ -453,33 +453,29 @@ std::vector<Chess::Game::Point> Chess::Game::generatePossible(Chess::Piece p, Pi
        // if the king hasnt moved
        if (!p.has_moved) {
          // if im not already in check
-         if (!resultsInCheck(p.x, p.y, p.x, p.y)) {
-           if (board[p.x][p.y + 3] &&
-               board[p.x][p.y + 3].type == ROOK &&
-               !board[p.x][p.y + 3].has_moved)
-           {
-             // if traveling to either of the next to squares dont result in check
-             if (!board[p.x][p.y + 1] && !resultsInCheck(p.x, p.y, p.x, p.y + 1)) {
-               if (!board[p.x][p.y + 2] && !resultsInCheck(p.x, p.y, p.x, p.y + 2)) {
-                 possible.push_back(Point {p.x, p.y + 2});
-               }
+         if (board[p.x][p.y + 3] &&
+             board[p.x][p.y + 3].type == ROOK &&
+             !board[p.x][p.y + 3].has_moved)
+         {
+           // if traveling to either of the next to squares dont result in check
+           if (!board[p.x][p.y + 1]) {
+             if (!board[p.x][p.y + 2]) {
+               possible.push_back(Point {p.x, p.y + 2});
              }
            }
          }
 
          // queen side castle
          // if im not already in check
-         if (!resultsInCheck(p.x, p.y, p.x, p.y)) {
-           if (board[p.x][p.y - 4] &&
-               board[p.x][p.y - 4].type == ROOK &&
-               !board[p.x][p.y - 4].has_moved)
-           {
-             // if traveling to either of the next to squares dont result in check
-             if (!board[p.x][p.y - 1] && !resultsInCheck(p.x, p.y, p.x, p.y - 1)) {
-               if (!board[p.x][p.y - 2] && !resultsInCheck(p.x, p.y, p.x, p.y - 2)) {
-                 if (!board[p.x][p.y - 3]) {
-                   possible.push_back(Point {p.x, p.y - 2});
-                 }
+         if (board[p.x][p.y - 4] &&
+             board[p.x][p.y - 4].type == ROOK &&
+             !board[p.x][p.y - 4].has_moved)
+         {
+           // if traveling to either of the next to squares dont result in check
+           if (!board[p.x][p.y - 1]) {
+             if (!board[p.x][p.y - 2]) {
+               if (!board[p.x][p.y - 3]) {
+                 possible.push_back(Point {p.x, p.y - 2});
                }
              }
            }
@@ -564,6 +560,28 @@ std::vector<Chess::Game::Point> Chess::Game::generatePossible(Chess::Piece p, Pi
 
 /******************************************************************************
  *
+ * Method: Game::genAllPossibleOpposing()
+ * 
+ * - generate all possible moves 
+ *****************************************************************************/
+std::vector<Chess::Game::Point> Chess::Game::genAllPossibleOpposing(Color c, Piece (&b)[8][8])
+{
+  std::vector<Point> possible;
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j ++) {
+      if (b[i][j] && b[i][j].Color() != c) {
+        auto piecePossible = genPossibleMvPiece(b[i][j], b);
+        possible.insert(std::end(possible),
+                        std::begin(piecePossible),
+                        std::end(piecePossible));
+      }
+    }
+  }
+  return possible; 
+}
+
+/******************************************************************************
+ *
  * Method: Game::display()
  * 
  * - render and display the background and pieces 
@@ -611,8 +629,17 @@ void Chess::Game::move(int from_x, int from_y, int to_x, int to_y, Piece (&board
   board[to_x][to_y].icon = board[from_x][from_y].icon;
   board[to_x][to_y].has_moved = true; 
   board[from_x][from_y].Clear();
-
   
+  // auto promote to queen
+  if (board[to_x][to_y].type == PAWN &&
+      (to_x == 0 || to_x == 8))
+  {
+    board[to_x][to_y].type = QUEEN;
+    board[to_x][to_y].icon = "resources/queen_" +
+                             board[to_x][to_y].colorToString() +
+                             ".png";
+  }
+
   if (is_castle) {
     auto dx = to_x - from_x;
     auto dy = to_y - from_y;
@@ -627,10 +654,9 @@ void Chess::Game::move(int from_x, int from_y, int to_x, int to_y, Piece (&board
       // queen side castle
       move(king_x, king_y - 2, king_x, king_y + 1, board);
     } 
-   
-
   }
 }
+
 /******************************************************************************
  *
  * Method: Game::resultsInCheck()
@@ -645,37 +671,26 @@ bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
   Piece local[8][8];
   std::copy(&_board[0][0], &_board[0][0]+8*8, &local[0][0]);
   std::vector<Point> possible;
+  
+  auto dy_pos = abs(from_y - to_y);
+  auto y_dir = to_y - from_y < 0 ? -1 : 1;
+  auto dx = abs(from_x - to_x);
 
-  // state of the board as if the move took place
-  move(from_x, from_y, to_x, to_y, local);
+  // castling move, cant castle out of, through, or into check
+  if (_board[from_x][from_y].type == KING && dy_pos >= 2) {
+    possible = genAllPossibleOpposing(pieceColor, _board);
+    return (containsPoint(from_x, from_y, possible) ||
+            containsPoint(from_x, from_y + (1 * y_dir), possible) ||
+            containsPoint(from_x, from_y + (2 * y_dir), possible));
+  } else {
+    move(from_x, from_y, to_x, to_y, local);
+  
+    possible = genAllPossibleOpposing(pieceColor, local);
 
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 8; j ++) {
-      if (local[i][j].Color() != pieceColor) {
-        if (local[i][j].type != KING) {
-          auto piecePossible = generatePossible(local[i][j], local);
-          possible.insert(std::end(possible),
-                          std::begin(piecePossible),
-                          std::end(piecePossible));
-        }
-      }
-    }
+    auto king = getKing(pieceColor, local);
+
+    return containsPoint(king.x, king.y, possible);
   }
-
-  auto getKing = [&] (auto color) {
-    for (int i = 0; i < 8; i ++) {
-      for (int j = 0; j < 8; j++) {
-        if (local[i][j].type == KING && local[i][j].Color() == color) {
-          return Point { local[i][j].x, local[i][j].y };
-        }
-      }
-    }
-    return Point {-1, -1};
-  };
-
-  auto king = getKing(pieceColor);
-
-  return containsPoint(king.x, king.y, possible) ? true : false;
 }
 
 /******************************************************************************
@@ -743,15 +758,34 @@ void Chess::Game::reset()
  * Method: Game::print_board()
  *
  *****************************************************************************/
-bool Chess::Game::containsPoint(int x, int y, std::vector<Point> possible)
+Chess::Game::Point Chess::Game::getKing(Color c, Piece (&b)[8][8] )
 {
-  if (validPoint(x,y)) {
-    for (auto point : possible) {
-      if (point.x == x && point.y == y) {
-        return true;
+    for (int i = 0; i < 8; i ++) {
+      for (int j = 0; j < 8; j++) {
+        if (b[i][j].type == KING && b[i][j].Color() == c) {
+          return Point { b[i][j].x, b[i][j].y };
+        }
       }
     }
+
+    return Point {-1, -1};
+}
+
+/******************************************************************************
+ *
+ * Method: Game::print_board()
+ *
+ *****************************************************************************/
+bool Chess::Game::containsPoint(int x, int y, std::vector<Point> possible)
+{
+  if (!validPoint(x,y)) {
     return false;
+  }
+
+  for (auto point : possible) {
+    if (point.x == x && point.y == y) {
+      return true;
+    }
   }
   return false;
 }

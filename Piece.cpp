@@ -41,13 +41,3 @@ std::string Chess::Piece::colorToString()
     default: return "none";
   }
 }
-
-/******************************************************************************
- *
- * Method: Piece::printPiece()
- *
- *****************************************************************************/
-void Chess::Piece::printPiece()
-{
-  std::cout << typeToString() << " " << colorToString() << "   ";
-}

@@ -11,7 +11,8 @@
 Chess::Game::Game()
 {
 
-  SDL_Init(SDL_INIT_VIDEO);
+  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+  Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 );
 
   _window = SDL_CreateWindow("Chess",
               SDL_WINDOWPOS_CENTERED,
@@ -22,7 +23,6 @@ Chess::Game::Game()
 
 
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
-
   auto* surface = IMG_Load("resources/circle.png");
 
   if (surface) {
@@ -32,6 +32,11 @@ Chess::Game::Game()
   if (!_window || !_renderer ) {
     std::cout << "ERROR IN INIT \n";
   }
+
+  _move_sound = Mix_LoadWAV("resources/place_down.wav"); 
+
+  // something is not working right with the win sound
+  _win_sound = Mix_LoadWAV("resources/game_lose.wav");
 
   // doing this here saves me a couple MB of ram
   p_textures.insert({"resources/pawn_white.png", loadTexture("resources/pawn_white.png") });
@@ -108,6 +113,10 @@ Chess::Game::~Game()
 {
   SDL_DestroyWindow(_window);
   SDL_DestroyRenderer(_renderer);
+  Mix_FreeChunk(_move_sound);
+  Mix_FreeChunk(_win_sound);
+  IMG_Quit();
+  Mix_Quit();
   SDL_Quit();
 }
 
@@ -241,16 +250,21 @@ void Chess::Game::run()
                                   grid_y, grid_x)) 
               {
                 move(clicked.value().x, clicked.value().y, grid_y, grid_x, _board);
+                Mix_PlayChannel( 0, _move_sound, 0 );
+                
                 _move_count++;
                 _state.isWhiteTurn = !_state.isWhiteTurn;
+                display();
                 // check for checkmate
                 if (isCheckmate()) {
-                 _state.game = GameState::EXIT; 
+                  Mix_PlayChannel(1, _win_sound, 0);
+                  SDL_Delay(3000);
+                  reset();
+                  Mix_PlayChannel(0, _move_sound, 0);
                 }
 
                 _possible_moves.clear();
 
-                display();
               }
 
             }
@@ -584,10 +598,6 @@ void Chess::Game::move(int from_x, int from_y, int to_x, int to_y, Piece (&board
   if (from_x == to_x && from_y == to_y) {
     return;
   }
-
-  std::cout << "Moving { " << from_x << " , " << from_y << "}\n"
-            << "to { " << to_x << " , " << to_y << "}\n";
-  
   
   auto dx = abs(to_x - from_x);
   auto dy = abs(to_y - from_y);
@@ -673,14 +683,59 @@ bool Chess::Game::resultsInCheck(int from_x, int from_y, int to_x, int to_y)
  * Method: Game::print_board()
  *
  *****************************************************************************/
-void Chess::Game::printBoard()
+void Chess::Game::reset()
 {
- for (int i = 0; i < ROWS; i ++) {
-   for (int j = 0; j < COLS; j++) {
-     _board[i][j].printPiece();
-   }
-  std::cout << "\n";
- }
+  _state.isWhiteTurn = true;
+  for (int i = 0; i < ROWS; i++) {
+    for (int j = 0; j < COLS; j++) {
+      if (i == 0) {
+        if (j == 0) {
+          _board[i][j] = Piece(i, j, PieceType::ROOK, Color::BLACK);
+        } else if (j == 1) {
+          _board[i][j] = Piece(i, j, PieceType::KNIGHT, Color::BLACK);
+        } else if (j == 2) {
+          _board[i][j] = Piece(i, j, PieceType::BISHOP, Color::BLACK);
+        } else if (j == 3) {
+          _board[i][j] = Piece(i, j, PieceType::QUEEN, Color::BLACK);
+        } else if (j == 4) {
+          _board[i][j] = Piece(i, j, PieceType::KING, Color::BLACK);
+        } else if (j == 5) {
+          _board[i][j] = Piece(i, j, PieceType::BISHOP, Color::BLACK);
+        } else if (j == 6) {
+          _board[i][j] = Piece(i, j, PieceType::KNIGHT, Color::BLACK);
+        } else if (j == 7) {
+          _board[i][j] = Piece(i, j, PieceType::ROOK, Color::BLACK);
+        }
+        
+      } else if (i == 1) {
+        _board[i][j] = Piece(i, j, PieceType::PAWN, Color::BLACK);
+      } else if (i == 6) {
+        _board[i][j] = Piece(i, j, PieceType::PAWN, Color::WHITE);
+      } else if (i == 7) {
+        if (j == 0) {
+          _board[i][j] = Piece(i, j, PieceType::ROOK, Color::WHITE);
+        } else if (j == 1) {
+          _board[i][j] = Piece(i, j, PieceType::KNIGHT, Color::WHITE);
+        } else if (j == 2) {
+          _board[i][j] = Piece(i, j, PieceType::BISHOP, Color::WHITE);
+        } else if (j == 3) {
+          _board[i][j] = Piece(i, j, PieceType::QUEEN, Color::WHITE);
+        } else if (j == 4) {
+          _board[i][j] = Piece(i, j, PieceType::KING, Color::WHITE);
+        } else if (j == 5) {
+          _board[i][j] = Piece(i, j, PieceType::BISHOP, Color::WHITE);
+        } else if (j == 6) {
+          _board[i][j] = Piece(i, j, PieceType::KNIGHT, Color::WHITE);
+        } else if (j == 7) {
+          _board[i][j] = Piece(i, j, PieceType::ROOK, Color::WHITE);
+        }
+      } else {
+        // no piece
+        _board[i][j] = Piece(i, j);
+      }
+    }
+  }
+  display();
 }
 
 /******************************************************************************
@@ -718,9 +773,9 @@ std::vector<Chess::Game::Point> Chess::Game::rookPossible(Piece p, Piece (&board
         x++;
       } else if (board[x][y].Color() != p.Color()) {
         possible.push_back(Point{x, y});
-        x = -1;
+        break;
       } else {
-        x = -1;
+        break;
       }
     }
   }
@@ -734,9 +789,9 @@ std::vector<Chess::Game::Point> Chess::Game::rookPossible(Piece p, Piece (&board
         x--;
       } else if (board[x][y].Color() != p.Color()) {
         possible.push_back(Point{x, y});
-        x = -1;
+        break;
       } else {
-        x = -1;
+        break;
       }
     }
   }
@@ -750,9 +805,9 @@ std::vector<Chess::Game::Point> Chess::Game::rookPossible(Piece p, Piece (&board
         y++;
       } else if (board[x][y].Color() != p.Color()) {
         possible.push_back(Point{x, y});
-        x = -1;
+        break;
       } else {
-        x = -1;
+        break;
       }
     }
   }
@@ -766,9 +821,9 @@ std::vector<Chess::Game::Point> Chess::Game::rookPossible(Piece p, Piece (&board
         y--;
       } else if (board[x][y].Color() != p.Color()) {
         possible.push_back(Point{x, y});
-        x = -1;
+        break; 
       } else {
-        x = -1;
+        break; 
       }
     }
   }
@@ -788,9 +843,9 @@ std::vector<Chess::Game::Point> Chess::Game::bishopPossible(Piece p, Piece (&boa
         y++;
       } else if (board[x][y].Color() != p.Color()) {
         possible.push_back(Point{x, y});
-        x = -1;
+        break;
       } else {
-        x = -1;
+        break;
       }
     }
   }
@@ -805,9 +860,9 @@ std::vector<Chess::Game::Point> Chess::Game::bishopPossible(Piece p, Piece (&boa
         y--;
       } else if (board[x][y].Color() != p.Color()) {
         possible.push_back(Point{x, y});
-        x = -1;
+        break;
       } else {
-        x = -1;
+        break;
       }
     }
   }
@@ -822,9 +877,9 @@ std::vector<Chess::Game::Point> Chess::Game::bishopPossible(Piece p, Piece (&boa
         x--;
       } else if (board[x][y].Color() != p.Color()) {
         possible.push_back(Point{x, y});
-        x = -1;
+        break;
       } else {
-        x = -1;
+        break; 
       }
     }
   }
@@ -839,9 +894,9 @@ std::vector<Chess::Game::Point> Chess::Game::bishopPossible(Piece p, Piece (&boa
         x++;
       } else if (board[x][y].Color() != p.Color()) {
         possible.push_back(Point{x, y});
-        x = -1;
+        break;
       } else {
-        x = -1;
+        break;
       }
     }
   }

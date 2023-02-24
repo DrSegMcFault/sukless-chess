@@ -5,6 +5,7 @@
 #include "Piece.h"
 #include "SDL.h"
 #include "SDL_image.h"
+#include "SDL_mixer.h"
 
 namespace Chess {
 
@@ -37,6 +38,8 @@ class Game {
     std::map<std::string, SDL_Texture*> p_textures; 
     
     SDL_Texture* _circleTexture;
+    Mix_Chunk* _move_sound;
+    Mix_Chunk* _win_sound;
 
     struct State {
       GameState game = GameState::PLAY;
@@ -64,12 +67,11 @@ class Game {
     void renderBackground();
     std::vector<Point> generatePossible(Piece p, Piece (&b)[8][8]);
     void renderPossible();
-    void printBoard();
 
     constexpr bool validPoint(int x, int y) const {
       return (x >= 0 && x < 8) && (y >=0 && y < 8);
     }
-
+    void reset();
     bool containsPoint(int x, int y, std::vector<Point> possible);
     std::vector<Point> rookPossible(Piece p, Piece (&b)[8][8]);
     std::vector<Point> bishopPossible(Piece p, Piece (&b)[8][8]);

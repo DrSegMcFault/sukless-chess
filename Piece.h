@@ -53,8 +53,6 @@ namespace Chess {
       
       void Clear() { type = NONE; color = C_NONE; x = -1; y = -1;}
 
-      void printPiece();
-
       std::string typeToString();
 
       std::string colorToString();

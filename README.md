@@ -5,7 +5,7 @@ The goal of this project is to provide a feature-rich yet minimalistic implement
 ```
 ./vcpkg install sdl2:<your-triplet> sdl2-image:<your-triplet> sdl2-mixer:<your triplet>
 ```
-## build
+## Build
 ```
  cmake -S . -B <your-build-folder> -DCMAKE_TOOLCHAIN_FILE=<path-to-vckpkg/scripts/buildsystems/vcpkg.cmake>
  cd <build-directory>

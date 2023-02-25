@@ -24,4 +24,8 @@ namespace Chess {
     QUEEN = 5,
     KING = 6
   };
+  struct Point {
+    int x = 0;
+    int y = 0;
+  };
 } // namespace chess

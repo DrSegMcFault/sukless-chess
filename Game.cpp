@@ -138,33 +138,10 @@ std::vector<Chess::Point> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece 
 
      if (!p.has_moved &&
        !board[p.x - mod][p.y] &&
-       !board[p.x - mod*2][p.y]) {
+       !board[p.x - mod*2][p.y])
+     {
        possible.push_back(Point{p.x - mod*2, p.y});
      }
-
-    //  if (auto left_piece = board[p.x][p.y - 1];
-    //      left_piece && left_piece.type == PAWN
-    //      && left_piece.Color() != p.Color()) 
-    //  {
-    //     // there is a pawn to the left of the opposite color
-    //     // check if it moved 2 squares on its last move (dx == 2)
-    //     auto dx = abs(left_piece.prev_x - left_piece.x);
-    //     if (dx == 2) {
-    //       possible.push_back( Point {p.x - (1*mod), p.y - 1});
-    //     }
-    //  }
-
-    //  if (auto right_piece = board[p.x][p.y + (1*mod)];
-    //      right_piece && right_piece.type == PAWN
-    //      && right_piece.Color() != p.Color()) 
-    //  {
-    //     // there is a pawn to the right of the opposite color
-    //     // check if it moved 2 squares on its last move (dx == 2)
-    //     auto dx = abs(right_piece.prev_x - right_piece.x);
-    //     if (dx == 2) {
-    //       possible.push_back( Point {p.x - (1 * mod), p.y + 1});
-    //     }
-    //  }
      break;
    }
 

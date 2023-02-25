@@ -67,7 +67,7 @@ void Chess::App::run()
 
   // main loop
   // we only render if there is a click on the screen for performance
-  while (_state.app != AppState::EXIT) {
+  while (_state != AppState::EXIT) {
 
     // render the first frame
     if (first) {
@@ -81,7 +81,7 @@ void Chess::App::run()
 
     switch (ev.type) {
       case SDL_QUIT:
-        _state.app = AppState::EXIT;
+        _state = AppState::EXIT;
         break;
 
       case SDL_MOUSEBUTTONDOWN:
@@ -89,8 +89,8 @@ void Chess::App::run()
         display();
         auto x = ev.button.x;
         auto y = ev.button.y;
-        int grid_x = floor(x / (_screenH / COLS));
-        int grid_y = floor(y / (_screenW / ROWS));
+        int grid_x = floor(x / (_screenH / 8));
+        int grid_y = floor(y / (_screenW / 8));
 
         // get the piece that was clicked on
         if (!clicked.has_value()) {
@@ -193,8 +193,8 @@ void Chess::App::displayPossible()
     auto y = point.y;
 
     SDL_Rect dest = {
-              _screenW / ROWS * y + 30,
-		          _screenH / COLS * x + 30,
+              _screenW / 8 * y + 30,
+		          _screenH / 8 * x + 30,
 			        20,
 			        20};
     SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
@@ -214,18 +214,18 @@ void Chess::App::renderBackground()
 	bool white = true;
 	SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255);
 
-	for (int i = 0; i < ROWS; i++) {
-		for (int j = 0; j < COLS; j++) {
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
 			if (white) {
 				SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255);
 			} else {
 				SDL_SetRenderDrawColor(_renderer, 83, 132, 172, 255);
 			}
 			white = !white;
-			SDL_Rect rectangle = { i * _screenW / ROWS,
-								  j * _screenH / COLS,
-								  _screenW / ROWS,
-								  _screenH / COLS };
+			SDL_Rect rectangle = { i * _screenW / 8,
+								  j * _screenH / 8,
+								  _screenW / 8,
+								  _screenH / 8 };
 			SDL_RenderFillRect(_renderer, &rectangle);
 		}
 		white = !white;
@@ -241,10 +241,10 @@ void Chess::App::renderPiece(SDL_Texture *texture, Piece p)
 {
   SDL_Rect src = {0, 0, 80, 80};
 	SDL_Rect dest = { 
-                    _screenW / ROWS * p.y + 5,
-					          _screenH / COLS * p.x + 5,
-					          _screenW / ROWS - 10,
-					          _screenH / COLS - 10};
+                    _screenW / 8 * p.y + 5,
+					          _screenH / 8 * p.x + 5,
+					          _screenW / 8 - 10,
+					          _screenH / 8 - 10};
   SDL_RenderCopy(_renderer, texture, &src, &dest);
 }
 

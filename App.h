@@ -18,8 +18,6 @@ class App {
   private:
     const int _screenW = 640;
     const int _screenH = 640;
-    static const int ROWS = 8;
-    static const int COLS = 8;
     SDL_Window* _window;
     SDL_Renderer* _renderer;
     std::map<std::string, SDL_Texture*> p_textures; 
@@ -33,10 +31,7 @@ class App {
       EXIT = 1
     };
 
-    struct State {
-      AppState app = AppState::PLAY;
-    };
-    State _state;
+    AppState _state;
 
     Chess::Game* _game;
 

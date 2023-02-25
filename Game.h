@@ -3,81 +3,48 @@
 #include <vector>
 #include <map>
 #include "Piece.h"
-#include "SDL.h"
-#include "SDL_image.h"
-#include "SDL_mixer.h"
 
 namespace Chess {
 
 class Game {
   public: 
     Game();
-    ~Game();
-    
-    void run();
 
-    enum GameState {
-      PLAY = 0,
-      EXIT = 1
-    };
-    
+    Piece _board[8][8];
+    uint8_t _move_count = 0;
+
+    bool isCheckmate();
+    bool resultsInCheck(int from_x, int from_y, int to_x, int to_y);
+
+    void reset();
+    std::vector<Point> genThisPossible(Piece p);
+    // try and move if true, the move took place
+    bool move(int from_x, int from_y, int to_x, int to_y, std::vector<Point> possible_moves);
+    bool isValidMove(int from_x,
+                     int from_y,
+                     int to_x, 
+                     int to_y, 
+                     std::vector<Point> possible_moves);
+
+    Piece pieceAt(int x, int y);
+
+    const bool colorMatchesTurn(Color c);
+
   private:
 
-    const int _screenW = 640;
-    const int _screenH = 640;
-    static const int ROWS = 8;
-    static const int COLS = 8;
-
-    SDL_Window* _window;
-    SDL_Renderer* _renderer;
-
-    Piece _board[ROWS][COLS];
-
-    uint8_t _move_count = 0;
-    
-    std::map<std::string, SDL_Texture*> p_textures; 
-    
-    SDL_Texture* _circleTexture;
-    Mix_Chunk* _move_sound;
-    Mix_Chunk* _win_sound;
-
-    struct State {
-      GameState game = GameState::PLAY;
-      bool isWhiteTurn = true; 
-    };
-
-    struct Point {
-      int x = 0;
-      int y = 0;
-    };
-
-    std::vector<Point> _possible_moves;
-
-    State _state;
-
     void move(int from_x, int from_y, int to_x, int to_y, Piece (&b)[8][8]);
-
-    void display();
-
-    // helper functions
-    bool isCheckmate();
-    void renderPiece(SDL_Texture* txture, Piece p);
-    SDL_Texture* loadTexture(const char* filepath);
-    bool resultsInCheck(int from_x, int from_y, int to_x, int to_y);
-    void renderBackground();
     std::vector<Point> genPossibleMvPiece(Piece p, Piece (&b)[8][8]);
     std::vector<Point> genAllPossibleOpposing(Color c, Piece (&b)[8][8]);
-    void renderPossible();
+    std::vector<Point> rookPossible(Piece p, Piece (&b)[8][8]);
+    std::vector<Point> bishopPossible(Piece p, Piece (&b)[8][8]);
+    Point getKing(Color c, Piece (&b)[8][8]);
+    void initBoard();
+    bool containsPoint(int x, int y, std::vector<Point> possible);
+    bool _isWhiteTurn = true; 
 
     constexpr bool validPoint(int x, int y) const {
       return (x >= 0 && x < 8) && (y >=0 && y < 8);
     }
-    void reset();
-    Point getKing(Color c, Piece (&b)[8][8]);
-
-    bool containsPoint(int x, int y, std::vector<Point> possible);
-    std::vector<Point> rookPossible(Piece p, Piece (&b)[8][8]);
-    std::vector<Point> bishopPossible(Piece p, Piece (&b)[8][8]);
 };
 
 } // namespace chess

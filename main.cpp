@@ -1,11 +1,7 @@
-#include <string>
-#include <vector>
-
-#include "Piece.h"
-#include "Game.h"
+#include "App.h"
 
 int main(int argc, char* argv[]) {
-  Chess::Game gm;
+  Chess::App gm;
   gm.run();
   return 0; 
 }

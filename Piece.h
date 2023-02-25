@@ -17,10 +17,11 @@ namespace Chess {
       Chess::Color color = C_NONE;
       PieceType type = NONE;
       bool has_moved = false;
-      bool en_passant = false;
 
       int x = 0;
       int y = 0;
+      int prev_x = 0;
+      int prev_y = 0;
 
       Piece() = default;
 
@@ -32,12 +33,16 @@ namespace Chess {
       Piece(int new_x, int new_y, PieceType type)
         : x(new_x),
           y(new_y),
+          prev_x(x),
+          prev_y(y),
           type(type)
       {}
 
       Piece(int new_x, int new_y, PieceType type, Color color)
         : x(new_x),
           y(new_y),
+          prev_x(x),
+          prev_y(y),
           type(type),
           color(color)
       {

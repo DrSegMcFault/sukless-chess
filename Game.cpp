@@ -138,8 +138,7 @@ std::vector<Chess::Point> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece 
 
      if (!p.has_moved &&
        !board[p.x - mod][p.y] &&
-       !board[p.x - mod*2][p.y])
-     {
+       !board[p.x - mod*2][p.y]) {
        possible.push_back(Point{p.x - mod*2, p.y});
      }
 

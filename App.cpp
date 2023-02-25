@@ -129,12 +129,12 @@ void Chess::App::run()
                 first = true;
                 Mix_PlayChannel(0, _move_sound, 0);
               }
-              
+
               SDL_Delay(1000);
               if (_ai->move(_game, _game->genAllPossibleOpposing(Color::WHITE))) {
-                display(); 
+                display();
                 Mix_PlayChannel( 0, _move_sound, 0 );
-              
+
                 // check for checkmate
                 if (_game->isCheckmate()) {
                   Mix_PlayChannel(1, _win_sound, 0);
@@ -143,7 +143,7 @@ void Chess::App::run()
                   _game->reset();
                   Mix_PlayChannel(0, _move_sound, 0);
                 }
-              } 
+              }
             }
           }
           clicked.reset(); 

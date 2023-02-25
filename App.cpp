@@ -51,6 +51,7 @@ Chess::App::App()
   p_textures.insert({"resources/knight_black.png", loadTexture("resources/knight_black.png") });
 
   _game = new Game();
+  _ai = new ChessAI(Color::BLACK, ChessAI::EASY);
 }
 
 /******************************************************************************
@@ -72,6 +73,7 @@ void Chess::App::run()
     // render the first frame
     if (first) {
       display();
+      auto b = _game->getBoard();
       first = false;
     }
 
@@ -109,9 +111,10 @@ void Chess::App::run()
 
           if (_game->colorMatchesTurn(clicked.value().Color()))
           {
+            Chess::Move m = { Point {clicked.value().x, clicked.value().y },
+                              Point {grid_y, grid_x} };
             // if the move took place
-            if (_game->move(clicked.value().x, clicked.value().y,
-                            grid_y, grid_x, _possible_moves))
+            if (_game->move(m, _possible_moves))
             {
               display();
 
@@ -126,6 +129,21 @@ void Chess::App::run()
                 first = true;
                 Mix_PlayChannel(0, _move_sound, 0);
               }
+              
+              SDL_Delay(1000);
+              if (_ai->move(_game, _game->genAllPossibleOpposing(Color::WHITE))) {
+                display(); 
+                Mix_PlayChannel( 0, _move_sound, 0 );
+              
+                // check for checkmate
+                if (_game->isCheckmate()) {
+                  Mix_PlayChannel(1, _win_sound, 0);
+                  SDL_Delay(3000);
+                  first = true;
+                  _game->reset();
+                  Mix_PlayChannel(0, _move_sound, 0);
+                }
+              } 
             }
           }
           clicked.reset(); 
@@ -188,9 +206,9 @@ void Chess::App::displayPossible()
  renderAllPieces();
  SDL_Rect src = {0,0, 180, 180};
  
- for (auto point : _possible_moves) {
-    auto x = point.x;
-    auto y = point.y;
+ for (auto move : _possible_moves) {
+    auto x = move.to.x;
+    auto y = move.to.y;
 
     SDL_Rect dest = {
               _screenW / 8 * y + 30,

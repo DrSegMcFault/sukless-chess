@@ -6,6 +6,7 @@
 #include "SDL_mixer.h"
 
 #include "Game.h"
+#include "ChessAI.h"
 
 namespace Chess {
 
@@ -24,7 +25,8 @@ class App {
     SDL_Texture* _circleTexture;
     Mix_Chunk* _move_sound;
     Mix_Chunk* _win_sound;
-    std::vector<Point> _possible_moves;
+    std::vector<Move> _possible_moves;
+    Chess::ChessAI* _ai;
 
     enum AppState {
       PLAY = 0,
@@ -41,6 +43,6 @@ class App {
     void display();
     void renderBackground();
     void displayPossible();
-    
+
 };
 } // namespace chess

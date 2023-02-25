@@ -2,12 +2,6 @@
 
 namespace Chess {
 
-  // turn
-  enum Move {
-    MOVE_WHITE = 0,
-    MOVE_BLACK = 1
-  };
-  
   // Piece color
   enum Color {
     WHITE = 0,
@@ -24,8 +18,14 @@ namespace Chess {
     QUEEN = 5,
     KING = 6
   };
+
   struct Point {
     int x = 0;
     int y = 0;
+  };
+
+  struct Move {
+    Point from;
+    Point to;
   };
 } // namespace chess

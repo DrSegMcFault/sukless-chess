@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.25.0)
+set(CMAKE_CXX_STANDARD 20)
 
 project(chess LANGUAGES C CXX)
 
 #set(CMAKE_CXX_COMPILIER "clang++")
-set(CMAKE_CXX_STANDARD 20)
 
 add_executable(chess)
-target_sources(chess PRIVATE main.cpp App.cpp Piece.cpp Game.cpp)
+target_sources(chess PRIVATE main.cpp App.cpp Piece.cpp Game.cpp ChessAI.cpp)
 
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_mixer CONFIG REQUIRED)

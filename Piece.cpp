@@ -21,7 +21,7 @@ std::string Chess::Piece::typeToString()
       return "king";
     case KNIGHT: 
       return "knight";
-    case NONE:
+    default:
       return " ";
   }
 }

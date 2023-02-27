@@ -14,6 +14,7 @@ class Game {
     uint8_t _move_count = 0;
 
     bool isCheckmate();
+    bool isResultsInCheckmate(Move m);
     bool resultsInCheck(Move m);
 
     void reset();
@@ -40,6 +41,8 @@ class Game {
   private:
 
     void move(Move m, Piece (&b)[8][8]);
+
+    const bool isColorInCheck(Color c, Piece (&b)[8][8]);
     std::vector<Move> genPossibleMvPiece(Piece p, Piece (&b)[8][8]);
     std::vector<Move> genAllPossibleOpposing(Color c, Piece (&b)[8][8]);
     std::vector<Move> rookPossible(Piece p, Piece (&b)[8][8]);

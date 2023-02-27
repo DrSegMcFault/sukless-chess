@@ -51,7 +51,7 @@ Chess::App::App()
   p_textures.insert({"resources/knight_black.png", loadTexture("resources/knight_black.png") });
 
   _game = new Game();
-  _ai = new ChessAI(Color::BLACK, ChessAI::EASY);
+  _ai = new ChessAI(Color::BLACK, ChessAI::MEDIUM, _game);
 }
 
 /******************************************************************************
@@ -65,6 +65,17 @@ void Chess::App::run()
   std::optional<Piece> clicked;
   // is_first_frame
   bool first = true;
+
+  auto check_game_over = [&]() {
+  // check for checkmate
+    if (_game->isCheckmate()) {
+      Mix_PlayChannel(1, _win_sound, 0);
+      SDL_Delay(3000);
+      first = true;
+      _game->reset();
+      Mix_PlayChannel(0, _move_sound, 0);
+    }
+  };
 
   // main loop
   // we only render if there is a click on the screen for performance
@@ -120,29 +131,22 @@ void Chess::App::run()
 
               Mix_PlayChannel( 0, _move_sound, 0 );
               _possible_moves.clear();
-
-              // check for checkmate
-              if (_game->isCheckmate()) {
-                Mix_PlayChannel(1, _win_sound, 0);
-                SDL_Delay(3000);
-                _game->reset();
-                first = true;
-                Mix_PlayChannel(0, _move_sound, 0);
-              }
+              check_game_over();
 
               SDL_Delay(1000);
-              if (_ai->move(_game, _game->genAllPossibleOpposing(Color::WHITE))) {
+
+              if (_ai->move(_game->genAllPossibleOpposing(Color::WHITE))) {
                 display();
                 Mix_PlayChannel( 0, _move_sound, 0 );
-
-                // check for checkmate
-                if (_game->isCheckmate()) {
-                  Mix_PlayChannel(1, _win_sound, 0);
-                  SDL_Delay(3000);
-                  first = true;
-                  _game->reset();
-                  Mix_PlayChannel(0, _move_sound, 0);
-                }
+                check_game_over();
+                
+              } else {
+                // stalemate or draw
+                Mix_PlayChannel(1, _win_sound, 0);
+                SDL_Delay(3000);
+                first = true;
+                _game->reset();
+                Mix_PlayChannel(0, _move_sound, 0);
               }
             }
           }

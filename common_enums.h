@@ -28,4 +28,9 @@ namespace Chess {
     Point from;
     Point to;
   };
+
+  struct Pair {
+    int score;
+    Move move;
+  };
 } // namespace chess

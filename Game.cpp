@@ -126,7 +126,23 @@ std::vector<Chess::Move> Chess::Game::genAllPossibleOpposing(Color c)
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-std::vector<Chess::Move> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (&board)[8][8] )
+const bool Chess::Game::isColorInCheck(Color c, Piece (&b)[8][8])
+{
+  auto otherColor = c == WHITE ? BLACK : WHITE;
+  auto possible = genAllPossibleOpposing(c, b);
+
+  auto king = getKing(c, b);
+
+  return containsPoint(king.x, king.y, possible);
+}
+
+/******************************************************************************
+ *
+ * Method: Game::genPossibleMvPiece()
+ * 
+ * - generate the possible moves for a given piece and board 
+ *****************************************************************************/
+std::vector<Chess::Move> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (&board)[8][8])
 {
   Point start = {p.x, p.y};
 

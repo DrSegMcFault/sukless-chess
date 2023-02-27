@@ -38,6 +38,8 @@ class App {
 
     void renderPiece(SDL_Texture* txture, Piece p);
     void renderAllPieces();
+    void displayBoard(Game::Board p);
+
     SDL_Texture* loadTexture(const char* filepath);
     void display();
     void renderBackground();

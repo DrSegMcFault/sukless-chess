@@ -8,7 +8,7 @@ class Game {
   public: 
     Game();
 
-    uint8_t _move_count = 0;
+    uint32_t _move_count = 0;
 
     bool isCheckmate();
     bool isResultsInCheckmate(Move m);
@@ -26,6 +26,7 @@ class Game {
     };
 
     Board getBoard();
+    std::vector<Board> history;
 
     const bool colorMatchesTurn(Color c);
     std::vector<Move> genAllPossibleOpposing(Color c);

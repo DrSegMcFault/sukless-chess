@@ -43,6 +43,11 @@ bool Game::move(Move m, std::vector<Move> possible_moves)
   {
     move(m, _board);
     _isWhiteTurn = !_isWhiteTurn;
+
+    _move_count++;
+
+    history.push_back(getBoard());
+
     return true;
   }
 
@@ -714,4 +719,5 @@ void Game::initBoard()
       }
     }
   }
+  history.push_back(getBoard());
 }

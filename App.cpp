@@ -66,6 +66,8 @@ void App::run()
   // is_first_frame
   bool first = true;
 
+  int viewing_move_num = 0;
+
   auto check_game_over = [&]() {
   // check for checkmate
     if (_game->isCheckmate()) {
@@ -104,6 +106,7 @@ void App::run()
         auto y = ev.button.y;
         int grid_x = floor(x / (_screenH / 8));
         int grid_y = floor(y / (_screenW / 8));
+        viewing_move_num = _game->_move_count;
 
         // get the piece that was clicked on
         if (!clicked.has_value()) {
@@ -128,17 +131,18 @@ void App::run()
             if (_game->move(m, _possible_moves))
             {
               display();
-
+              viewing_move_num++;
               Mix_PlayChannel( 0, _move_sound, 0 );
               _possible_moves.clear();
               check_game_over();
 
-              SDL_Delay(1000);
+              SDL_Delay(750);
 
               if (_ai->move(_game->genAllPossibleOpposing(Color::WHITE))) {
                 display();
                 Mix_PlayChannel( 0, _move_sound, 0 );
                 check_game_over();
+                viewing_move_num++;
                 
               } else {
                 // stalemate or draw
@@ -154,6 +158,32 @@ void App::run()
         }
         break;
       }
+      case SDL_KEYDOWN:
+      {
+        switch (ev.key.keysym.sym) {
+          case SDLK_LEFT:
+          {
+            // go backwards in move history
+            if (viewing_move_num - 1 < 0) {
+              break;
+            }
+            displayBoard(_game->history[--viewing_move_num]);
+            break;
+          }
+          case SDLK_RIGHT:
+          {
+            // go forward in move history
+            if (viewing_move_num + 1 > _game->_move_count) {
+              break;
+            }
+            displayBoard(_game->history[++viewing_move_num]);
+            break;
+          }
+        }
+
+        break;
+      }
+
       default:
         break;
     }
@@ -193,6 +223,23 @@ void App::renderAllPieces() {
       }
     }
    }
+}
+
+void App::displayBoard(Game::Board p)
+{
+  SDL_RenderClear(_renderer);
+  renderBackground();
+  // render all peices
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      if (auto piece = p.board[i][j];
+          piece)
+      {
+        renderPiece(p_textures.at(piece.Icon()), piece);
+      }
+    }
+   }
+   SDL_RenderPresent(_renderer);
 }
 
 /******************************************************************************

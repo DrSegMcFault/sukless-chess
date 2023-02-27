@@ -1,20 +1,19 @@
 #pragma once
 
+#include <map>
 #include "common_enums.h"
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_mixer.h"
-
 #include "Game.h"
-#include "ChessAI.h"
-
-namespace Chess {
+#include "AI.h"
 
 class App {
   public:
     App();
     ~App();
     void run();
+    void simulate();
 
   private:
     const int _screenW = 640;
@@ -26,7 +25,7 @@ class App {
     Mix_Chunk* _move_sound;
     Mix_Chunk* _win_sound;
     std::vector<Move> _possible_moves;
-    Chess::ChessAI* _ai;
+    AI* _ai;
 
     enum AppState {
       PLAY = 0,
@@ -35,7 +34,7 @@ class App {
 
     AppState _state;
 
-    Chess::Game* _game;
+    Game* _game;
 
     void renderPiece(SDL_Texture* txture, Piece p);
     void renderAllPieces();
@@ -43,6 +42,4 @@ class App {
     void display();
     void renderBackground();
     void displayPossible();
-
 };
-} // namespace chess

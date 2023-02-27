@@ -1,6 +1,3 @@
-#include <iostream>
-#include <optional>
-#include "common_enums.h"
 #include "Game.h"
 
 /******************************************************************************
@@ -8,7 +5,7 @@
  * Method: Game::Game()
  *
  *****************************************************************************/
-Chess::Game::Game()
+Game::Game()
 {
   initBoard();
 }
@@ -18,7 +15,7 @@ Chess::Game::Game()
  * Method: Game::reset()
  *
  *****************************************************************************/
-void Chess::Game::reset()
+void Game::reset()
 {
   _isWhiteTurn = true;
   initBoard();
@@ -29,18 +26,17 @@ void Chess::Game::reset()
  * Method: Game::genThisPossible()
  * - returns the possible moves for this piece
  *****************************************************************************/
-std::vector<Chess::Move> Chess::Game::genThisPossible(Chess::Piece p)
+std::vector<Move> Game::genThisPossible(Piece p)
 {
   return genPossibleMvPiece(p, _board);
 }
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::move(x, y, x, y, possible moves)
+ * Method: Game::move(Move, possible moves)
  *
  *****************************************************************************/
-bool Chess::Game::move(Move m,
-                       std::vector<Move> possible_moves)
+bool Game::move(Move m, std::vector<Move> possible_moves)
 {
   if (containsPoint(m.to.x, m.to.y, possible_moves) &&
       !resultsInCheck(m))
@@ -58,7 +54,7 @@ bool Chess::Game::move(Move m,
  * Method: Game::isCheckmate()
  *
  *****************************************************************************/
-bool Chess::Game::isCheckmate()
+bool Game::isCheckmate()
 {
   const auto cur_player_color = _isWhiteTurn ? WHITE : BLACK;
   
@@ -84,7 +80,7 @@ bool Chess::Game::isCheckmate()
  * PUBLIC
  * Method: Game::pieceAt(x, y)
  *****************************************************************************/
-Chess::Piece Chess::Game::pieceAt(int x, int y)
+Piece Game::pieceAt(int x, int y)
 {
   return validPoint(x, y) ? _board[x][y] : Piece();
 }
@@ -93,11 +89,10 @@ Chess::Piece Chess::Game::pieceAt(int x, int y)
  * PUBLIC
  * Method: Game::getBoard()
  *****************************************************************************/
-Chess::Game::Board Chess::Game::getBoard()
+Game::Board Game::getBoard()
 {
   Board b;
   std::copy(&_board[0][0], &_board[0][0]+8*8, &b.board[0][0]);
-  b.board;
   return b;
 }
 
@@ -105,7 +100,7 @@ Chess::Game::Board Chess::Game::getBoard()
  * PUBLIC
  * Method: Game::colorMatchesTurn(Color)
  *****************************************************************************/
-const bool Chess::Game::colorMatchesTurn(Color c)
+const bool Game::colorMatchesTurn(Color c)
 {
   return (c == WHITE && _isWhiteTurn) ||
          (c == BLACK && !_isWhiteTurn);
@@ -115,7 +110,7 @@ const bool Chess::Game::colorMatchesTurn(Color c)
  * PUBLIC
  * Method: Game::colorMatchesTurn(Color)
  *****************************************************************************/
-std::vector<Chess::Move> Chess::Game::genAllPossibleOpposing(Color c)
+std::vector<Move> Game::genAllPossibleOpposing(Color c)
 {
   return genAllPossibleOpposing(c, _board);
 }
@@ -126,7 +121,7 @@ std::vector<Chess::Move> Chess::Game::genAllPossibleOpposing(Color c)
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-const bool Chess::Game::isColorInCheck(Color c, Piece (&b)[8][8])
+const bool Game::isColorInCheck(Color c, Piece (&b)[8][8])
 {
   auto otherColor = c == WHITE ? BLACK : WHITE;
   auto possible = genAllPossibleOpposing(c, b);
@@ -142,18 +137,18 @@ const bool Chess::Game::isColorInCheck(Color c, Piece (&b)[8][8])
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-std::vector<Chess::Move> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (&board)[8][8])
+std::vector<Move> Game::genPossibleMvPiece(Piece p, Piece (&board)[8][8])
 {
   Point start = {p.x, p.y};
 
-  std::vector<Chess::Move> possible;
-  auto mod = p.color == Chess::WHITE ? 1 : -1;
+  std::vector<Move> possible;
+  auto mod = p.color == Color::WHITE ? 1 : -1;
 
   // determine if move is possible for knight and king
   auto knightKing = [&] (auto x, auto y) {
     if (validPoint(x,y)) {
       if (!board[x][y] || (board[x][y] && board[x][y].Color() != p.Color())) {
-        possible.push_back(Chess::Move{start, Point{x, y}});
+        possible.push_back(Move{start, Point{x, y}});
       }
     }
   };
@@ -163,15 +158,15 @@ std::vector<Chess::Move> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (
     {
       // if there isnt a piece in front of the pawn, its possible
       if (!board[p.x - mod][p.y]) {
-        possible.push_back(Chess::Move{start, Point{p.x - mod, p.y}});
+        possible.push_back(Move{start, Point{p.x - mod, p.y}});
       }
 
       if (board[p.x - mod][p.y - mod] && p.color != board[p.x-mod][p.y-mod].color) {
-        possible.push_back(Chess::Move {start, Point{p.x - mod, p.y - mod} });
+        possible.push_back(Move {start, Point{p.x - mod, p.y - mod} });
       }
 
       if (board[p.x - mod][p.y + mod] && p.Color() != board[p.x-mod][p.y+mod].Color()) {
-        possible.push_back(Chess::Move {start,Point{p.x - mod, p.y + mod}});
+        possible.push_back(Move {start,Point{p.x - mod, p.y + mod}});
       }
 
 
@@ -179,7 +174,7 @@ std::vector<Chess::Move> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (
        !board[p.x - mod][p.y] &&
        !board[p.x - mod*2][p.y])
      {
-       possible.push_back(Chess::Move {start,Point{p.x - mod*2, p.y} });
+       possible.push_back(Move {start,Point{p.x - mod*2, p.y} });
      }
      break;
    }
@@ -254,7 +249,7 @@ std::vector<Chess::Move> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (
            // if traveling to either of the next to squares dont result in check
            if (!board[p.x][p.y + 1]) {
              if (!board[p.x][p.y + 2]) {
-               possible.push_back(Chess::Move{start, Point {p.x, p.y + 2} });
+               possible.push_back(Move{start, Point {p.x, p.y + 2} });
              }
            }
          }
@@ -269,7 +264,7 @@ std::vector<Chess::Move> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (
            if (!board[p.x][p.y - 1]) {
              if (!board[p.x][p.y - 2]) {
                if (!board[p.x][p.y - 3]) {
-                 possible.push_back(Chess::Move{start, Point {p.x, p.y - 2}});
+                 possible.push_back(Move{start, Point {p.x, p.y - 2}});
                }
              }
            }
@@ -358,7 +353,7 @@ std::vector<Chess::Move> Chess::Game::genPossibleMvPiece(Chess::Piece p, Piece (
  * 
  * - generate all possible moves for the opposing color
  *****************************************************************************/
-std::vector<Chess::Move> Chess::Game::genAllPossibleOpposing(Color c, Piece (&b)[8][8])
+std::vector<Move> Game::genAllPossibleOpposing(Color c, Piece (&b)[8][8])
 {
   std::vector<Move> possible;
   for (int i = 0; i < 8; i++) {
@@ -380,7 +375,7 @@ std::vector<Chess::Move> Chess::Game::genAllPossibleOpposing(Color c, Piece (&b)
  * 
  * - move a piece to a new location within a given board
  *****************************************************************************/
-void Chess::Game::move(Move m, Piece (&board)[8][8])
+void Game::move(Move m, Piece (&board)[8][8])
 {
   auto from_x = m.from.x;
   auto from_y = m.from.y;
@@ -425,11 +420,11 @@ void Chess::Game::move(Move m, Piece (&board)[8][8])
     // if the difference in y is positive, its a king side castle
     // move the rook to the correct position
     if (dy > 0) {
-      move(Chess::Move{Point {king_x, king_y + 1} , Point {king_x, king_y -1}},
+      move(Move {Point {king_x, king_y + 1} , Point {king_x, king_y -1}},
            board);
     } else {
       // queen side castle
-      move(Chess::Move{Point {king_x, king_y - 2} , Point {king_x, king_y + 1} },
+      move(Move {Point {king_x, king_y - 2} , Point {king_x, king_y + 1} },
            board);
     } 
   }
@@ -442,7 +437,7 @@ void Chess::Game::move(Move m, Piece (&board)[8][8])
  * -- given a proposed move, see if that move results in check
  *    for the same color piece
  *****************************************************************************/
-bool Chess::Game::resultsInCheck(Move m)
+bool Game::resultsInCheck(Move m)
 {
   auto pieceColor = _board[m.from.x][m.from.y].Color();
 
@@ -477,7 +472,7 @@ bool Chess::Game::resultsInCheck(Move m)
  * Method: Game::getKing()
  *
  *****************************************************************************/
-Chess::Point Chess::Game::getKing(Color c, Piece (&b)[8][8] )
+Point Game::getKing(Color c, Piece (&b)[8][8] )
 {
     for (int i = 0; i < 8; i ++) {
       for (int j = 0; j < 8; j++) {
@@ -495,7 +490,7 @@ Chess::Point Chess::Game::getKing(Color c, Piece (&b)[8][8] )
  * Method: Game::containsPoint()
  *
  *****************************************************************************/
-bool Chess::Game::containsPoint(int x, int y, std::vector<Move> possible)
+bool Game::containsPoint(int x, int y, std::vector<Move> possible)
 {
   if (!validPoint(x,y)) {
     return false;
@@ -514,19 +509,19 @@ bool Chess::Game::containsPoint(int x, int y, std::vector<Move> possible)
  * Method: Game::rookPossible()
  *
  *****************************************************************************/
-std::vector<Chess::Move> Chess::Game::rookPossible(Piece p, Piece (&board)[8][8] )
+std::vector<Move> Game::rookPossible(Piece p, Piece (&board)[8][8] )
 {
-  std::vector<Chess::Move> possible;
+  std::vector<Move> possible;
   Point start = {p.x, p.y};
   {
     auto x = p.x + 1;
     auto y = p.y;
     while (validPoint(x, y)) {
       if (!board[x][y]) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         x++;
       } else if (board[x][y].Color() != p.Color()) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         break;
       } else {
         break;
@@ -539,10 +534,10 @@ std::vector<Chess::Move> Chess::Game::rookPossible(Piece p, Piece (&board)[8][8]
     auto y = p.y;
     while (validPoint(x, y)) {
       if (!board[x][y]) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         x--;
       } else if (board[x][y].Color() != p.Color()) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         break;
       } else {
         break;
@@ -555,10 +550,10 @@ std::vector<Chess::Move> Chess::Game::rookPossible(Piece p, Piece (&board)[8][8]
     auto y = p.y + 1;
     while (validPoint(x, y)) {
       if (!board[x][y]) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         y++;
       } else if (board[x][y].Color() != p.Color()) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         break;
       } else {
         break;
@@ -571,10 +566,10 @@ std::vector<Chess::Move> Chess::Game::rookPossible(Piece p, Piece (&board)[8][8]
     auto y = p.y - 1;
     while (validPoint(x, y)) {
       if (!board[x][y]) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         y--;
       } else if (board[x][y].Color() != p.Color()) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         break; 
       } else {
         break; 
@@ -589,7 +584,7 @@ std::vector<Chess::Move> Chess::Game::rookPossible(Piece p, Piece (&board)[8][8]
  * Method: Game::bishopPossible()
  *
  *****************************************************************************/
-std::vector<Chess::Move> Chess::Game::bishopPossible(Piece p, Piece (&board)[8][8] )
+std::vector<Move> Game::bishopPossible(Piece p, Piece (&board)[8][8] )
 {
   std::vector<Move> possible;
   Point start = {p.x, p.y};
@@ -598,11 +593,11 @@ std::vector<Chess::Move> Chess::Game::bishopPossible(Piece p, Piece (&board)[8][
     auto y = p.y + 1;
     while (validPoint(x, y)) {
       if (!board[x][y]) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         x++;
         y++;
       } else if (board[x][y].Color() != p.Color()) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         break;
       } else {
         break;
@@ -615,11 +610,11 @@ std::vector<Chess::Move> Chess::Game::bishopPossible(Piece p, Piece (&board)[8][
     auto y = p.y - 1;
     while (validPoint(x, y)) {
       if (!board[x][y]) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         x--;
         y--;
       } else if (board[x][y].Color() != p.Color()) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         break;
       } else {
         break;
@@ -632,11 +627,11 @@ std::vector<Chess::Move> Chess::Game::bishopPossible(Piece p, Piece (&board)[8][
     auto y = p.y + 1;
     while (validPoint(x, y)) {
       if (!board[x][y]) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         y++;
         x--;
       } else if (board[x][y].Color() != p.Color()) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         break;
       } else {
         break; 
@@ -649,11 +644,11 @@ std::vector<Chess::Move> Chess::Game::bishopPossible(Piece p, Piece (&board)[8][
     auto y = p.y - 1;
     while (validPoint(x, y)) {
       if (!board[x][y]) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         y--;
         x++;
       } else if (board[x][y].Color() != p.Color()) {
-        possible.push_back(Chess::Move {start,Point{x, y}});
+        possible.push_back(Move {start,Point{x, y}});
         break;
       } else {
         break;
@@ -668,7 +663,7 @@ std::vector<Chess::Move> Chess::Game::bishopPossible(Piece p, Piece (&board)[8][
  * Method: Game::initBoard()
  *
  *****************************************************************************/
-void Chess::Game::initBoard()
+void Game::initBoard()
 {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {

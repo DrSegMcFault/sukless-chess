@@ -1,12 +1,11 @@
 #include "Piece.h"
-#include <iostream>
 
 /******************************************************************************
  *
  * Method: Piece::typeToString()
  *
  *****************************************************************************/
-std::string Chess::Piece::typeToString()
+std::string Piece::typeToString()
 {
   switch (type) {
     case PAWN:
@@ -31,7 +30,7 @@ std::string Chess::Piece::typeToString()
  * Method: Piece::colorToString()
  *
  *****************************************************************************/
-std::string Chess::Piece::colorToString()
+std::string Piece::colorToString()
 {
   switch (color) {
     case WHITE:

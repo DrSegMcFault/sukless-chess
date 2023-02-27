@@ -7,7 +7,7 @@
  * Method: App::App()
  *
  *****************************************************************************/
-Chess::App::App() 
+App::App() 
 {
 
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
@@ -51,7 +51,7 @@ Chess::App::App()
   p_textures.insert({"resources/knight_black.png", loadTexture("resources/knight_black.png") });
 
   _game = new Game();
-  _ai = new ChessAI(Color::BLACK, ChessAI::MEDIUM, _game);
+  _ai = new AI(Color::BLACK, AI::MEDIUM, _game);
 }
 
 /******************************************************************************
@@ -59,7 +59,7 @@ Chess::App::App()
  * Method: App::run()
  *
  *****************************************************************************/
-void Chess::App::run()
+void App::run()
 {
   // cached piece that has been previously clicked
   std::optional<Piece> clicked;
@@ -122,7 +122,7 @@ void Chess::App::run()
 
           if (_game->colorMatchesTurn(clicked.value().Color()))
           {
-            Chess::Move m = { Point {clicked.value().x, clicked.value().y },
+            Move m = { Point {clicked.value().x, clicked.value().y },
                               Point {grid_y, grid_x} };
             // if the move took place
             if (_game->move(m, _possible_moves))
@@ -166,7 +166,7 @@ void Chess::App::run()
  * 
  * - render and display the background and pieces 
  *****************************************************************************/
-void Chess::App::display()
+void App::display()
 {
    SDL_RenderClear(_renderer);
 
@@ -182,7 +182,7 @@ void Chess::App::display()
  * 
  * - render and display the background and pieces 
  *****************************************************************************/
-void Chess::App::renderAllPieces() {
+void App::renderAllPieces() {
   // render all peices
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
@@ -201,7 +201,7 @@ void Chess::App::renderAllPieces() {
  * 
  * - display the possible moves
  *****************************************************************************/
-void Chess::App::displayPossible()
+void App::displayPossible()
 {
  SDL_RenderClear(_renderer);
 
@@ -231,7 +231,7 @@ void Chess::App::displayPossible()
  * 
  * - render and display the background
  *****************************************************************************/
-void Chess::App::renderBackground()
+void App::renderBackground()
 {
 	bool white = true;
 	SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255);
@@ -259,7 +259,7 @@ void Chess::App::renderBackground()
  * Method: App::renderPiece()
  *
  *****************************************************************************/
-void Chess::App::renderPiece(SDL_Texture *texture, Piece p)
+void App::renderPiece(SDL_Texture *texture, Piece p)
 {
   SDL_Rect src = {0, 0, 80, 80};
 	SDL_Rect dest = { 
@@ -275,7 +275,7 @@ void Chess::App::renderPiece(SDL_Texture *texture, Piece p)
  * Method: App::App()
  *
  *****************************************************************************/
-SDL_Texture* Chess::App::loadTexture(const char* filepath)
+SDL_Texture* App::loadTexture(const char* filepath)
 {
   auto* img = IMG_Load(filepath);
 
@@ -289,10 +289,74 @@ SDL_Texture* Chess::App::loadTexture(const char* filepath)
 
 /******************************************************************************
  *
+ * Method: App::simulate()
+ * 
+ * - simulate 1000 games between 2 AI's 
+ *****************************************************************************/
+void App::simulate()
+{
+  Game* gm = new Game();
+  AI ai_black(Color::BLACK, AI::MEDIUM, gm);
+  AI ai_white(Color::WHITE, AI::EASY, gm);
+
+  int games = 0;
+  int blackWs = 0;
+  int whiteWs = 0;
+  int draw_stalemate = 0;
+  int move_count = 0; 
+  while (games != 10) {
+   if (ai_white.move(gm->genAllPossibleOpposing(Color::BLACK))) {
+     move_count++;
+     if (gm->isCheckmate()) {
+       whiteWs++; 
+       games++;
+       gm->reset();
+       move_count = 0;
+     }
+
+   } else {
+    draw_stalemate++;
+    games++;
+       move_count = 0;
+    gm->reset();
+   }
+
+   if (ai_black.move(gm->genAllPossibleOpposing(Color::WHITE))) {
+     move_count++;
+     if (gm->isCheckmate()) {
+       blackWs++; 
+       games++;
+       gm->reset();
+       move_count = 0;
+     }
+   } else {
+    draw_stalemate++;
+    games++;
+    gm->reset();
+       move_count = 0;
+   }
+   move_count++;
+   if (move_count > 100) {
+    gm->reset();
+    games++;
+    draw_stalemate ++;
+    move_count = 0;
+   }
+  std::cout << "Games: " << games << "\nWhite wins: " 
+            << whiteWs << "\nBlack Wins " << blackWs <<
+             "\nDraw/Stalemates " << draw_stalemate << "\n";
+  }
+
+  std::cout << "Games: " << games << "\nWhite wins: " 
+            << whiteWs << "\nBlack Wins " << blackWs <<
+             "\nDraw/Stalemates " << draw_stalemate << "\n";
+}
+/******************************************************************************
+ *
  * Method: App::~App()
  *
  *****************************************************************************/
-Chess::App::~App()
+App::~App()
 {
   SDL_DestroyWindow(_window);
   SDL_DestroyRenderer(_renderer);

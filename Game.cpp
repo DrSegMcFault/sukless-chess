@@ -408,7 +408,7 @@ void Chess::Game::move(Move m, Piece (&board)[8][8])
 
   // auto promote to queen
   if (board[to_x][to_y].type == PAWN &&
-      (to_x == 0 || to_x == 8))
+      (to_x == 0 || to_x == 7))
   {
     board[to_x][to_y].type = QUEEN;
     board[to_x][to_y].icon = "resources/queen_" +

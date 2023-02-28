@@ -73,10 +73,11 @@ int AI::evaluate(Move m)
       // the 'best' move is to take a piece, put the other player
       // in check, and the piece cannot be taken after
       int score = 0;
-      bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
 
       Piece local[8][8];
       std::copy(&_game->_board[0][0], &_game->_board[0][0]+8*8, &local[0][0]);
+
+      bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
 
       // below this is the result of 1 move
       ChessUtils::move(m, local);

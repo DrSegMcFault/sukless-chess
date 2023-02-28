@@ -29,6 +29,7 @@ class AI : public ChessUtils {
     bool decent_move(std::vector<Move> possible);
     bool isCapture(Move m);
     bool isPieceImmune(int x, int y, Piece (&b)[8][8]);
+    bool isAttacking(Move m);
     int evaluate(Move m);
     int getPieceValue(Piece p);
     Move getRandMove(std::vector<Pair> pairs);

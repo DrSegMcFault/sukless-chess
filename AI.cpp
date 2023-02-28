@@ -1,5 +1,5 @@
 #include "AI.h"
-
+#include <iostream>
 /******************************************************************************
  *
  * Method: AI::AI()
@@ -73,9 +73,12 @@ int AI::evaluate(Move m)
       // the 'best' move is to take a piece, put the other player
       // in check, and the piece cannot be taken after
       int score = 0;
+      bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
 
       Piece local[8][8];
       std::copy(&_game->_board[0][0], &_game->_board[0][0]+8*8, &local[0][0]);
+
+      // below this is the result of 1 move
       ChessUtils::move(m, local);
 
       auto other_color = _controlling == WHITE ? BLACK : WHITE;
@@ -89,6 +92,7 @@ int AI::evaluate(Move m)
          
         score += 5 + val_capture;
       }
+
       if (_game->isColorInCheck(other_color, local) )
       {
         // if check and immune, very valuable
@@ -101,6 +105,17 @@ int AI::evaluate(Move m)
       if (!isPieceImmune(m.to.x, m.to.y, local)) {
         score -= getPieceValue(_game->pieceAt(m.from.x, m.from.y));;
       }
+
+      // If the piece was under attack and a retreating
+      // square is available, the move is equal to the
+      // pieces value
+      if (was_attacked && isPieceImmune(m.to.x, m.to.y, local)){
+        score += getPieceValue(_game->pieceAt(m.from.x, m.from.y));
+      }
+
+      // if (isAttacking(m) && isPieceImmune(m.to.x, m.to.y, local)) {
+      //   score += getPieceValue(m.from.x,m.from.y);
+      // }
 
       return score;
       break;
@@ -162,7 +177,8 @@ bool AI::decent_move(std::vector<Move> possible)
   } else {
     success = _game->move(scores[best_idx].move, possible);
   }
-  //std::cout << "best score is " << best_score << "\n";
+  
+  std::cout << "best score is " << best_score << "\n";
 
   return success;
 }

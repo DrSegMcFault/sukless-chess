@@ -17,7 +17,6 @@ Game::Game()
  *****************************************************************************/
 void Game::reset()
 {
-  _isWhiteTurn = true;
   initBoard();
 }
 
@@ -213,6 +212,9 @@ void Game::initBoard()
       }
     }
   }
+
   history.clear();
+  _isWhiteTurn = true;
+  _move_count = 0;
   history.push_back(getBoard());
 }

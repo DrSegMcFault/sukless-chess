@@ -76,7 +76,7 @@ int AI::evaluate(Move m)
 
       Piece local[8][8];
       std::copy(&_game->_board[0][0], &_game->_board[0][0]+8*8, &local[0][0]);
-      _game->move(m, local);
+      ChessUtils::move(m, local);
 
       auto other_color = _controlling == WHITE ? BLACK : WHITE;
 
@@ -194,7 +194,7 @@ bool AI::isCapture(Move m) {
 bool AI::isPieceImmune(int x, int y, Piece (&b)[8][8])
 {
   auto p = b[x][y];
-  auto possible = _game->genAllPossibleOpposing(_controlling, b);
+  auto possible = GAPM_Opposing(_controlling, b);
   if (_game->containsPoint(p.x, p.y, possible)) {
     return false;
   }

@@ -6,7 +6,7 @@ project(chess LANGUAGES C CXX)
 #set(CMAKE_CXX_COMPILIER "clang++")
 
 add_executable(chess)
-target_sources(chess PRIVATE main.cpp App.cpp Piece.cpp Game.cpp AI.cpp)
+target_sources(chess PRIVATE main.cpp App.cpp Piece.cpp Game.cpp AI.cpp ChessUtils.cpp)
 
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_mixer CONFIG REQUIRED)

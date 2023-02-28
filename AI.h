@@ -1,7 +1,8 @@
 #include "common_enums.h"
 #include "Game.h"
+#include "ChessUtils.h"
 
-class AI {
+class AI : public ChessUtils {
   public:
   
     enum Difficulty {

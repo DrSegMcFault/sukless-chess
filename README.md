@@ -34,3 +34,7 @@ cd <build-dir> ./chess
 cd <build-dir> ./Debug/chess
 ```
 *do your shells equivalent of the bash ``` ./ ```
+## Using Sukless-Chess
+
+### Features
+1. To view move history, press the left and right arrow keys. *History does not persist across multiple games.

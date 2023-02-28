@@ -35,7 +35,8 @@ App::App()
   _move_sound = Mix_LoadWAV("resources/place_down.wav"); 
 
   // something is not working right with the win sound
-  _win_sound = Mix_LoadWAV("resources/game_lose.wav");
+  _win_sound = Mix_LoadWAV("resources/game_win.wav");
+  _lose_sound = Mix_LoadWAV("resources/game_lose.wav");
 
   p_textures.insert({"resources/pawn_white.png", loadTexture("resources/pawn_white.png") });
   p_textures.insert({"resources/pawn_black.png", loadTexture("resources/pawn_black.png") });
@@ -68,13 +69,14 @@ void App::run()
 
   int viewing_move_num = 0;
 
-  auto check_game_over = [&]() {
+  auto check_game_over = [&](auto sound) {
   // check for checkmate
     if (_game->isCheckmate()) {
-      Mix_PlayChannel(1, _win_sound, 0);
+      Mix_PlayChannel(1, sound, 0);
       SDL_Delay(3000);
       first = true;
       _game->reset();
+      viewing_move_num = 0;
       Mix_PlayChannel(0, _move_sound, 0);
     }
   };
@@ -134,14 +136,14 @@ void App::run()
               viewing_move_num++;
               Mix_PlayChannel( 0, _move_sound, 0 );
               _possible_moves.clear();
-              check_game_over();
+              check_game_over(_win_sound);
 
               SDL_Delay(750);
 
               if (_ai->move(_game->genAllPossibleOpposing(Color::WHITE))) {
                 display();
                 Mix_PlayChannel( 0, _move_sound, 0 );
-                check_game_over();
+                check_game_over(_lose_sound);
                 viewing_move_num++;
                 
               } else {

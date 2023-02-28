@@ -24,6 +24,7 @@ class App {
     SDL_Texture* _circleTexture;
     Mix_Chunk* _move_sound;
     Mix_Chunk* _win_sound;
+    Mix_Chunk* _lose_sound;
     std::vector<Move> _possible_moves;
     AI* _ai;
 

@@ -8,6 +8,7 @@
  *****************************************************************************/
 Game::Game()
 {
+  _board = std::vector<std::vector<Piece>>(8, std::vector<Piece>(8, Piece()));
   initBoard();
 }
 
@@ -49,8 +50,7 @@ bool Game::move(Move m)
 
     _move_count++;
     
-    Board b;
-    std::copy(&_board[0][0], &_board[0][0]+8*8, &b.board[0][0]);
+    Game::Field b(_board);
 
     history.push_back(ChessUtils::board_to_fen(b));
     std::cout << history[history.size() - 1] << std::endl;
@@ -116,11 +116,9 @@ Piece Game::pieceAt(int x, int y)
  * PUBLIC
  * Method: Game::getBoard()
  *****************************************************************************/
-Board Game::getBoard()
+Game::Field Game::getBoard()
 {
-  Board b;
-  std::copy(&_board[0][0], &_board[0][0]+8*8, &b.board[0][0]);
-  return b;
+  return _board;
 }
 
 /******************************************************************************
@@ -153,7 +151,6 @@ bool Game::resultsInCheck(Move m)
 {
   auto pieceColor = _board[m.from.x][m.from.y].Color();
 
-  Piece local[8][8];
   std::vector<Move> possible;
   auto dy_pos = abs(m.from.y - m.to.y);
 
@@ -168,7 +165,7 @@ bool Game::resultsInCheck(Move m)
             containsPoint(m.from.x, m.from.y + (2 * y_dir), possible));
   } else {
 
-    std::copy(&_board[0][0], &_board[0][0]+8*8, &local[0][0]);
+    Field local(_board);
     ChessUtils::move(m, local);
 
     possible = GAPM_Opposing(pieceColor, local);
@@ -239,7 +236,5 @@ void Game::initBoard()
   history.clear();
   _isWhiteTurn = true;
   _move_count = 0;
-  Board b;
-  std::copy(&_board[0][0], &_board[0][0]+8*8, &b.board[0][0]);
-  history.push_back(ChessUtils::board_to_fen(b));
+  history.push_back(ChessUtils::board_to_fen(_board));
 }

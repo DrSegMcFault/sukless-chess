@@ -228,14 +228,14 @@ void App::renderAllPieces() {
    }
 }
 
-void App::displayBoard(Board p)
+void App::displayBoard(Field board)
 {
   SDL_RenderClear(_renderer);
   renderBackground();
   // render all peices
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      if (auto piece = p.board[i][j];
+      if (auto piece = board[i][j];
           piece)
       {
         renderPiece(p_textures.at(piece.Icon()), piece);

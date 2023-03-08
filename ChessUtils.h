@@ -2,21 +2,21 @@
 
 #include <vector>
 #include "Piece.h"
-#include "Board.h"
 #include "common_enums.h"
 
 class ChessUtils {
   public:
-    std::vector<Move> GPM_Piece(Piece p, Piece (&b)[8][8]);
-    std::vector<Move> GAPM_Opposing(Color c, Piece (&b)[8][8]);
-    std::vector<Move> rookPossible(Piece p, Piece (&b)[8][8]);
-    std::vector<Move> bishopPossible(Piece p, Piece (&b)[8][8]);
-    const bool isColorInCheck(Color c, Piece (&b)[8][8]);
-    Point getKing(Color c, Piece (&b)[8][8]);
-    void move(Move m, Piece (&b)[8][8]);
+    using Field = std::vector<std::vector<Piece>>;
+    std::vector<Move> GPM_Piece(Piece p, Field b);
+    std::vector<Move> GAPM_Opposing(Color c, Field b);
+    std::vector<Move> rookPossible(Piece p, Field b);
+    std::vector<Move> bishopPossible(Piece p, Field b);
+    const bool isColorInCheck(Color c, Field b);
+    Point getKing(Color c, Field b);
+    void move(Move m, Field& b);
     bool containsPoint(int x, int y, std::vector<Move> possible);
-    std::string board_to_fen(Board b);
-    Board fen_to_board(std::string fen);
+    std::string board_to_fen(Field b);
+    Field fen_to_board(std::string fen);
     PieceType fen_to_type(char c);
 
     constexpr bool validPoint(int x, int y) const {

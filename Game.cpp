@@ -34,7 +34,7 @@ std::vector<Move> Game::genThisPossible(Piece p)
 /******************************************************************************
  * PUBLIC
  * Method: Game::move(Move, possible moves)
- *
+ * this should really return a enum called Result { SUCCESS, FAILURE, CHECKMATE }
  *****************************************************************************/
 bool Game::move(Move m)
 {
@@ -55,9 +55,24 @@ bool Game::move(Move m)
     history.push_back(ChessUtils::board_to_fen(b));
     std::cout << history[history.size() - 1] << std::endl;
 
+    if (history.size() >= 3) {
+      auto count = 0;
+      auto last = history[history.size() - 1]; 
+      for (int i = 0; i < history.size() - 2; i++) {
+        if (history[i].compare(last) == 0) {
+          count++;
+        }
+      }
+      // 3 move repetition draw
+      if (count >= 3) {
+        std::cout << "3 move repetition draw" << std::endl;
+        return false;
+      }
+    }
+
     return true;
   }
-
+  // something other than 3 move repetition, or a valid move
   return false;
 }
 

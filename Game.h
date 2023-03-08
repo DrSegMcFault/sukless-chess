@@ -2,7 +2,9 @@
 
 #include <vector>
 #include "common_enums.h"
+
 #include "Piece.h"
+#include "Board.h"
 #include "ChessUtils.h"
 
 class Game : public ChessUtils {
@@ -14,20 +16,17 @@ class Game : public ChessUtils {
     bool isCheckmate();
     bool resultsInCheckmate(Move m);
     bool resultsInCheck(Move m);
+    std::vector<Move> possible_moves;
 
     void reset();
     std::vector<Move> genThisPossible(Piece p);
 
     // try and move if true, the move took place
-    bool move(Move m, std::vector<Move> possible_moves);
+    bool move(Move m);
 
     Piece pieceAt(int x, int y);
-    struct Board
-    {
-      Piece board[8][8];
-    };
 
-    std::vector<Board> history;
+    std::vector<std::string> history;
     Board getBoard();
 
     const bool colorMatchesTurn(Color c);

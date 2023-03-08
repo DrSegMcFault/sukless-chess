@@ -6,7 +6,7 @@
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-std::vector<Move> ChessUtils::GPM_Piece(Piece p, Piece (&board)[8][8])
+std::vector<Move> ChessUtils::GPM_Piece(Piece p, Field board)
 {
   Point start = {p.x, p.y};
 
@@ -221,7 +221,7 @@ std::vector<Move> ChessUtils::GPM_Piece(Piece p, Piece (&board)[8][8])
  * 
  * - generate all possible moves for the opposing color
  *****************************************************************************/
-std::vector<Move> ChessUtils::GAPM_Opposing(Color c, Piece (&b)[8][8])
+std::vector<Move> ChessUtils::GAPM_Opposing(Color c, Field b)
 {
   std::vector<Move> possible;
   for (int i = 0; i < 8; i++) {
@@ -242,7 +242,7 @@ std::vector<Move> ChessUtils::GAPM_Opposing(Color c, Piece (&b)[8][8])
  * Method: ChessUtils::rookPossible()
  *
  *****************************************************************************/
-std::vector<Move> ChessUtils::rookPossible(Piece p, Piece (&board)[8][8] )
+std::vector<Move> ChessUtils::rookPossible(Piece p, Field board )
 {
   std::vector<Move> possible;
   Point start = {p.x, p.y};
@@ -317,7 +317,7 @@ std::vector<Move> ChessUtils::rookPossible(Piece p, Piece (&board)[8][8] )
  * Method: ChessUtils::bishopPossible()
  *
  *****************************************************************************/
-std::vector<Move> ChessUtils::bishopPossible(Piece p, Piece (&board)[8][8] )
+std::vector<Move> ChessUtils::bishopPossible(Piece p, Field board )
 {
   std::vector<Move> possible;
   Point start = {p.x, p.y};
@@ -396,7 +396,7 @@ std::vector<Move> ChessUtils::bishopPossible(Piece p, Piece (&board)[8][8] )
  * Method: ChessUtils::getKing()
  *
  *****************************************************************************/
-Point ChessUtils::getKing(Color c, Piece (&b)[8][8] )
+Point ChessUtils::getKing(Color c, Field b )
 {
     for (int i = 0; i < 8; i ++) {
       for (int j = 0; j < 8; j++) {
@@ -415,7 +415,7 @@ Point ChessUtils::getKing(Color c, Piece (&b)[8][8] )
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-const bool ChessUtils::isColorInCheck(Color c, Piece (&b)[8][8])
+const bool ChessUtils::isColorInCheck(Color c, Field b)
 {
   auto otherColor = c == WHITE ? BLACK : WHITE;
   auto possible = GAPM_Opposing(c, b);
@@ -431,7 +431,7 @@ const bool ChessUtils::isColorInCheck(Color c, Piece (&b)[8][8])
  * 
  * - move a piece to a new location within a given board
  *****************************************************************************/
-void ChessUtils::move(Move m, Piece (&board)[8][8])
+void ChessUtils::move(Move m, Field& board)
 {
   auto from_x = m.from.x;
   auto from_y = m.from.y;
@@ -507,7 +507,7 @@ bool ChessUtils::containsPoint(int x, int y, std::vector<Move> possible)
 
 // returns the standard FEN representation of the board
 // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
-std::string ChessUtils::board_to_fen(Board b)
+std::string ChessUtils::board_to_fen(Field b)
 {
   std::string fen = "";
   int empty = 0;
@@ -516,11 +516,11 @@ std::string ChessUtils::board_to_fen(Board b)
 
   while (x < 8) {
     while (y < 8) {
-      if (b.board[x][y]) {
-        fen += b.board[x][y].typeToFEN();
+      if (b[x][y]) {
+        fen += b[x][y].typeToFEN();
         y++;
       } else {
-        while (!b.board[x][y] && y < 8) {
+        while (!b[x][y] && y < 8) {
           empty++;
           y++;
         }
@@ -544,13 +544,14 @@ std::string ChessUtils::board_to_fen(Board b)
   return fen;
 }
 // returns a board from a FEN string
-Board ChessUtils::fen_to_board(std::string fen) {
-  Board b;
+ChessUtils::Field ChessUtils::fen_to_board(std::string fen) {
+
+  Field b = std::vector<std::vector<Piece>>(8, std::vector<Piece>(8));
   int x = 0;
   int y = 0;
   for (auto c : fen) {
     if (c == 'x') {
-      b.board[x][y] = Piece(x, y);
+      b[x][y] = Piece(x, y);
       continue;
     }
     if (c == '/') {
@@ -559,7 +560,7 @@ Board ChessUtils::fen_to_board(std::string fen) {
     } else if (c >= '1' && c <= '8') {
       y += c - '0';
     } else {
-      b.board[x][y] = Piece(x, y, fen_to_type(c), isupper(c) ? WHITE : BLACK);
+      b[x][y] = Piece(x, y, fen_to_type(c), isupper(c) ? WHITE : BLACK);
       y++;
     }
   }

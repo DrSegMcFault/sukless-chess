@@ -74,8 +74,7 @@ int AI::evaluate(Move m)
       // in check, and the piece cannot be taken after
       int score = 0;
 
-      Piece local[8][8];
-      std::copy(&_game->_board[0][0], &_game->_board[0][0]+8*8, &local[0][0]);
+      Field local(_game->_board);
 
       bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
 
@@ -208,7 +207,7 @@ bool AI::isCapture(Move m) {
   return piece_dest && piece_moving.Color() != piece_dest.Color();
 }
 
-bool AI::isPieceImmune(int x, int y, Piece (&b)[8][8])
+bool AI::isPieceImmune(int x, int y, Field b)
 {
   auto p = b[x][y];
   auto possible = GAPM_Opposing(_controlling, b);

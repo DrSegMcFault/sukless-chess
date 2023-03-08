@@ -6,9 +6,10 @@
 #include "SDL_image.h"
 #include "SDL_mixer.h"
 #include "Game.h"
+#include "Board.h"
 #include "AI.h"
 
-class App {
+class App : public ChessUtils {
   public:
     App();
     ~App();
@@ -39,7 +40,7 @@ class App {
 
     void renderPiece(SDL_Texture* txture, Piece p);
     void renderAllPieces();
-    void displayBoard(Game::Board p);
+    void displayBoard(Board p);
 
     SDL_Texture* loadTexture(const char* filepath);
     void display();

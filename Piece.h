@@ -55,6 +55,7 @@ class Piece {
     void Clear() { type = NONE; color = C_NONE; x = -1; y = -1;}
 
     std::string typeToString();
+    std::string typeToFEN();
 
     std::string colorToString();
 };

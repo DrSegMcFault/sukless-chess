@@ -130,7 +130,7 @@ void App::run()
             Move m = { Point {clicked.value().x, clicked.value().y },
                               Point {grid_y, grid_x} };
             // if the move took place
-            if (_game->move(m, _possible_moves))
+            if (_game->move(m))
             {
               display();
               viewing_move_num++;
@@ -169,7 +169,7 @@ void App::run()
             if (viewing_move_num - 1 < 0) {
               break;
             }
-            displayBoard(_game->history[--viewing_move_num]);
+            displayBoard(ChessUtils::fen_to_board(_game->history[--viewing_move_num]));
             break;
           }
           case SDLK_RIGHT:
@@ -178,7 +178,7 @@ void App::run()
             if (viewing_move_num + 1 > _game->_move_count) {
               break;
             }
-            displayBoard(_game->history[++viewing_move_num]);
+            displayBoard(ChessUtils::fen_to_board(_game->history[++viewing_move_num]));
             break;
           }
         }
@@ -227,7 +227,7 @@ void App::renderAllPieces() {
    }
 }
 
-void App::displayBoard(Game::Board p)
+void App::displayBoard(Board p)
 {
   SDL_RenderClear(_renderer);
   renderBackground();

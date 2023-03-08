@@ -16,7 +16,7 @@ AI::AI(Color to_control, Difficulty d, Game* game)
  * Method: AI::move()
  *
  *****************************************************************************/
-bool AI::move( std::vector<Move> possible)
+bool AI::move(std::vector<Move> possible)
 {
   switch (_difficulty) {
     case MEDIUM:
@@ -41,13 +41,13 @@ bool AI::weak_move(std::vector<Move> possible)
     return false;
   }
   if (possible.size() == 1) {
-    success = _game->move(possible.at(0), possible);
+    success = _game->move(possible.at(0));
   } 
   else {
     auto move_idx = rand() % possible.size(); 
     int tries = 0;
       while (!success || tries < possible.size() * 2) {
-        success = _game->move(possible.at(move_idx), possible);
+        success = _game->move(possible.at(move_idx));
         move_idx = rand() % possible.size();
         tries++;
       }
@@ -171,12 +171,12 @@ bool AI::decent_move(std::vector<Move> possible)
 
   if (best_score <= 0) {
     int tries = 0;
-    while (!success || tries > scores.size() *2) {
-      success = _game->move(getRandMove(scores), possible);
+    while (!success || tries > scores.size() * 2) {
+      success = _game->move(getRandMove(scores));
       tries++;
     }
   } else {
-    success = _game->move(scores[best_idx].move, possible);
+    success = _game->move(scores[best_idx].move);
   }
   
   std::cout << "best score is " << best_score << "\n";
@@ -196,6 +196,8 @@ int AI::getPieceValue(Piece p)
       return 900;
     case ROOK:
       return 500;
+    case KING:
+      return 10000;
     default:
       return 0;
   }

@@ -25,6 +25,26 @@ std::string Piece::typeToString()
   }
 }
 
+std::string Piece::typeToFEN()
+{
+  switch (type) {
+    case PAWN:
+      return color == WHITE ? "P" : "p";
+    case ROOK:
+      return color == WHITE ? "R" : "r";
+    case BISHOP:
+      return color == WHITE ? "B" : "b";
+    case QUEEN: 
+      return color == WHITE ? "Q" : "q";
+    case KING:
+      return color == WHITE ? "K" : "k";
+    case KNIGHT:
+      return color == WHITE ? "N" : "n"; 
+    case NONE:
+      return "x";
+  }
+}
+
 /******************************************************************************
  *
  * Method: Piece::colorToString()

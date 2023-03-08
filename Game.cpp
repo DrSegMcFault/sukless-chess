@@ -1,4 +1,5 @@
 #include "Game.h"
+#include <iostream>
 
 /******************************************************************************
  *
@@ -35,17 +36,24 @@ std::vector<Move> Game::genThisPossible(Piece p)
  * Method: Game::move(Move, possible moves)
  *
  *****************************************************************************/
-bool Game::move(Move m, std::vector<Move> possible_moves)
+bool Game::move(Move m)
 {
+  auto possible_moves = genThisPossible(pieceAt(m.from.x, m.from.y));
+
   if (containsPoint(m.to.x, m.to.y, possible_moves) &&
       !resultsInCheck(m))
   {
     ChessUtils::move(m, _board);
+
     _isWhiteTurn = !_isWhiteTurn;
 
     _move_count++;
+    
+    Board b;
+    std::copy(&_board[0][0], &_board[0][0]+8*8, &b.board[0][0]);
 
-    history.push_back(getBoard());
+    history.push_back(ChessUtils::board_to_fen(b));
+    std::cout << history[history.size() - 1] << std::endl;
 
     return true;
   }
@@ -93,7 +101,7 @@ Piece Game::pieceAt(int x, int y)
  * PUBLIC
  * Method: Game::getBoard()
  *****************************************************************************/
-Game::Board Game::getBoard()
+Board Game::getBoard()
 {
   Board b;
   std::copy(&_board[0][0], &_board[0][0]+8*8, &b.board[0][0]);
@@ -216,5 +224,7 @@ void Game::initBoard()
   history.clear();
   _isWhiteTurn = true;
   _move_count = 0;
-  history.push_back(getBoard());
+  Board b;
+  std::copy(&_board[0][0], &_board[0][0]+8*8, &b.board[0][0]);
+  history.push_back(ChessUtils::board_to_fen(b));
 }

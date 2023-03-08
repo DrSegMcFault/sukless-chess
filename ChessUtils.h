@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Piece.h"
+#include "Board.h"
 #include "common_enums.h"
 
 class ChessUtils {
@@ -14,6 +15,9 @@ class ChessUtils {
     Point getKing(Color c, Piece (&b)[8][8]);
     void move(Move m, Piece (&b)[8][8]);
     bool containsPoint(int x, int y, std::vector<Move> possible);
+    std::string board_to_fen(Board b);
+    Board fen_to_board(std::string fen);
+    PieceType fen_to_type(char c);
 
     constexpr bool validPoint(int x, int y) const {
       return (x >= 0 && x < 8) && (y >=0 && y < 8);

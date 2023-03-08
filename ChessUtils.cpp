@@ -52,7 +52,6 @@ std::vector<Move> ChessUtils::GPM_Piece(Piece p, Piece (&board)[8][8])
    { 
       auto rook = rookPossible(p, board);
       possible.insert(std::end(possible), std::begin(rook), std::end(rook));
-      rookPossible(p, board);
       break;
    }
 
@@ -504,4 +503,84 @@ bool ChessUtils::containsPoint(int x, int y, std::vector<Move> possible)
     }
   }
   return false;
+}
+
+// returns the standard FEN representation of the board
+// https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+std::string ChessUtils::board_to_fen(Board b)
+{
+  std::string fen = "";
+  int empty = 0;
+  int x = 0;
+  int y = 0;
+
+  while (x < 8) {
+    while (y < 8) {
+      if (b.board[x][y]) {
+        fen += b.board[x][y].typeToFEN();
+        y++;
+      } else {
+        while (!b.board[x][y] && y < 8) {
+          empty++;
+          y++;
+        }
+        if (empty > 0 && empty <= 8) {
+          fen += std::to_string(empty);
+          empty = 0;
+        }
+      }
+    }
+
+    y = 0;
+    empty = 0;
+
+    if (x != 7) {
+      fen += "/";
+    }
+
+    x++;
+  }
+
+  return fen;
+}
+// returns a board from a FEN string
+Board ChessUtils::fen_to_board(std::string fen) {
+  Board b;
+  int x = 0;
+  int y = 0;
+  for (auto c : fen) {
+    if (c == 'x') {
+      b.board[x][y] = Piece(x, y);
+      continue;
+    }
+    if (c == '/') {
+      x++;
+      y = 0;
+    } else if (c >= '1' && c <= '8') {
+      y += c - '0';
+    } else {
+      b.board[x][y] = Piece(x, y, fen_to_type(c), isupper(c) ? WHITE : BLACK);
+      y++;
+    }
+  }
+  return b;
+}
+
+PieceType ChessUtils::fen_to_type(char c) {
+  switch (toupper(c)) {
+    case 'P':
+      return PAWN;
+    case 'R':
+      return ROOK;
+    case 'N':
+      return KNIGHT;
+    case 'B':
+      return BISHOP;
+    case 'Q':
+      return QUEEN;
+    case 'K':
+      return KING;
+    default:
+      return NONE;
+  }
 }

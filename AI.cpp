@@ -196,8 +196,6 @@ int AI::getPieceValue(Piece p)
       return 900;
     case ROOK:
       return 500;
-    case KING:
-      return 10000;
     default:
       return 0;
   }

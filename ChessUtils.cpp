@@ -1,5 +1,5 @@
 #include "ChessUtils.h"
-
+#include <iostream>
 /******************************************************************************
  *
  * Method: ChessUtils::genPossibleMvPiece()

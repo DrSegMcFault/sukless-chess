@@ -152,6 +152,7 @@ void App::run()
                 SDL_Delay(3000);
                 first = true;
                 _game->reset();
+                viewing_move_num = 0;
                 Mix_PlayChannel(0, _move_sound, 0);
               }
             }

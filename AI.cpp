@@ -100,6 +100,7 @@ int AI::evaluate(Move m)
       Board local(_game->_board);
 
       bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
+      auto piece_from = _game->pieceAt(m.from.x, m.from.y);
 
       // below this is the result of 1 move
       ChessUtils::move(m, local);
@@ -136,9 +137,28 @@ int AI::evaluate(Move m)
       // square is available, the move is equal to the
       // pieces value
       if (was_attacked && isPieceImmune(m.to.x, m.to.y, local)){
-        score += getPieceValue(_game->pieceAt(m.from.x, m.from.y));
+        score += getPieceValue(piece_from);
       }
 
+      // currently a hack for early game pawn movement
+      // TODO: all other piece types
+      if (isPieceImmune(m.to.x, m.to.y, local)) {
+        if (piece_from.type == PAWN) {
+          switch (piece_from.Color()) {
+            case WHITE:
+              score += pawn_white_p[m.to.x][m.to.y];
+              break;
+            case BLACK:
+              score += pawn_black_p[m.to.x][m.to.y];
+              break;
+            default:
+              break;
+          }
+        } else if (piece_from.type == KNIGHT) {
+          score += knight_p[m.to.x][m.to.y];
+        }
+
+      }
       return score;
       break;
     }

@@ -62,7 +62,6 @@ MoveResult Game::move(Move m)
       }
       // 3 move repetition draw
       if (count >= 3) {
-        std::cout << "3 move repetition draw" << std::endl;
         return MoveResult::DRAW;
       }
     }
@@ -70,7 +69,6 @@ MoveResult Game::move(Move m)
     return isCheckmate() ? MoveResult::CHECKMATE : MoveResult::VALID;
   }
   // something other than 3 move repetition, or a valid move
-  std::cout << "invalid move" << std::endl;
   return MoveResult::INVALID;
 }
 

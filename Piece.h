@@ -50,12 +50,12 @@ class Piece {
 
     const auto Icon() { return icon.c_str(); };
 
-    const Color Color() { return color; };
+    const Color Color() const { return color; };
       
     void Clear() { type = NONE; color = C_NONE; x = -1; y = -1;}
 
     std::string typeToString();
-    std::string typeToFEN();
+    std::string typeToFEN() const ;
 
     std::string colorToString();
 };

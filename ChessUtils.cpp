@@ -6,7 +6,7 @@
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-std::vector<Move> ChessUtils::GPM_Piece(Piece p, Board board)
+std::vector<Move> ChessUtils::GPM_Piece(Piece p, const Board& board)
 {
   Point start = {p.x, p.y};
 
@@ -223,7 +223,7 @@ std::vector<Move> ChessUtils::GPM_Piece(Piece p, Board board)
  * 
  * - generate all possible moves for the opposing color
  *****************************************************************************/
-std::vector<Move> ChessUtils::GAPM_Opposing(Color c, Board b)
+std::vector<Move> ChessUtils::GAPM_Opposing(Color c, const Board& b)
 {
   std::vector<Move> possible;
   for (int i = 0; i < 8; i++) {
@@ -244,7 +244,7 @@ std::vector<Move> ChessUtils::GAPM_Opposing(Color c, Board b)
  * Method: ChessUtils::rookPossible()
  *
  *****************************************************************************/
-std::vector<Move> ChessUtils::rookPossible(Piece p, Board board )
+std::vector<Move> ChessUtils::rookPossible(Piece p, const Board& board )
 {
   std::vector<Move> possible;
   Point start = {p.x, p.y};
@@ -319,7 +319,7 @@ std::vector<Move> ChessUtils::rookPossible(Piece p, Board board )
  * Method: ChessUtils::bishopPossible()
  *
  *****************************************************************************/
-std::vector<Move> ChessUtils::bishopPossible(Piece p, Board board )
+std::vector<Move> ChessUtils::bishopPossible(Piece p, const Board& board )
 {
   std::vector<Move> possible;
   Point start = {p.x, p.y};
@@ -398,7 +398,7 @@ std::vector<Move> ChessUtils::bishopPossible(Piece p, Board board )
  * Method: ChessUtils::getKing()
  *
  *****************************************************************************/
-Point ChessUtils::getKing(Color c, Board b)
+Point ChessUtils::getKing(Color c, const Board& b)
 {
     for (int i = 0; i < 8; i ++) {
       for (int j = 0; j < 8; j++) {
@@ -417,7 +417,7 @@ Point ChessUtils::getKing(Color c, Board b)
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-const bool ChessUtils::isColorInCheck(Color c, Board b)
+const bool ChessUtils::isColorInCheck(Color c, const Board& b)
 {
   auto otherColor = c == WHITE ? BLACK : WHITE;
   auto possible = GAPM_Opposing(c, b);
@@ -509,7 +509,7 @@ bool ChessUtils::containsPoint(int x, int y, std::vector<Move> possible)
 
 // returns the standard FEN representation of the board
 // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
-std::string ChessUtils::board_to_fen(Board b)
+std::string ChessUtils::board_to_fen(const Board& b)
 {
   std::string fen = "";
   int empty = 0;

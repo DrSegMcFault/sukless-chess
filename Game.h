@@ -18,7 +18,6 @@ class Game : public ChessUtils {
     std::vector<std::string> history;
 
     bool isCheckmate();
-    bool resultsInCheckmate(Move m);
     bool resultsInCheck(Move m);
 
     void reset();

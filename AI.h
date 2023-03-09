@@ -33,6 +33,7 @@ class AI : public ChessUtils {
     bool isCheckmate(Board b);
     int evaluate(Move m);
     int getPieceValue(Piece p);
+    bool isMoveCheck(Move m, Board b);
     Move getRandMove(std::vector<Pair> pairs);
 
   private:

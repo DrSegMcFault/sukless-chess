@@ -10,9 +10,9 @@ class Game : public ChessUtils {
   public: 
     Game();
 
-    using Field = std::vector<std::vector<Piece>>;
+    using Board = std::vector<std::vector<Piece>>;
 
-    Field _board;
+    Board _board;
     uint32_t _move_count = 0;
     std::vector<Move> possible_moves;
     std::vector<std::string> history;
@@ -25,11 +25,11 @@ class Game : public ChessUtils {
     std::vector<Move> genThisPossible(Piece p);
 
     // try and move if true, the move took place
-    bool move(Move m);
+    MoveResult move(Move m);
 
     Piece pieceAt(int x, int y);
 
-    Field getBoard();
+    Board getBoard();
 
     const bool colorMatchesTurn(Color c);
     std::vector<Move> genAllPossibleOpposing(Color c);

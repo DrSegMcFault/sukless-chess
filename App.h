@@ -39,8 +39,8 @@ class App : public ChessUtils {
 
     void renderPiece(SDL_Texture* txture, Piece p);
     void renderAllPieces();
-    using Field = std::vector<std::vector<Piece>>;
-    void displayBoard(Field p);
+    using Board = std::vector<std::vector<Piece>>;
+    void displayBoard(Board p);
 
     SDL_Texture* loadTexture(const char* filepath);
     void display();

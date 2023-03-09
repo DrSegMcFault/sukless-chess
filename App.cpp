@@ -69,16 +69,45 @@ void App::run()
 
   int viewing_move_num = 0;
 
-  auto check_game_over = [&](auto sound) {
+  auto game_over = [&](auto sound) {
   // check for checkmate
-    if (_game->isCheckmate()) {
-      Mix_PlayChannel(1, sound, 0);
-      SDL_Delay(3000);
-      first = true;
-      _game->reset();
-      viewing_move_num = 0;
-      Mix_PlayChannel(0, _move_sound, 0);
+    Mix_PlayChannel(1, sound, 0);
+    SDL_Delay(1500);
+    first = true;
+    _game->reset();
+    viewing_move_num = 0;
+    Mix_PlayChannel(0, _move_sound, 0);
+  };
+
+  auto handle_move = [&](auto move) {
+    auto result = _game->move(move);
+    switch (result) {
+      case MoveResult::VALID:
+        display();
+        viewing_move_num++;
+        Mix_PlayChannel( 0, _move_sound, 0 );
+        _possible_moves.clear();
+        break;
+
+      case MoveResult::INVALID:
+        std::cout << "Invalid move \n";
+        break;
+
+      case MoveResult::CHECKMATE:
+        std::cout << "Checkmate \n";
+        game_over(_win_sound);
+        break;
+
+      case MoveResult::DRAW:
+        game_over(_lose_sound);
+        std::cout << "Draw \n";
+        break;
+
+      default:
+        std::cout << "something went wrong \n";
+        break;
     }
+    return result;
   };
 
   // main loop
@@ -129,33 +158,16 @@ void App::run()
           {
             Move m = { Point {clicked.value().x, clicked.value().y },
                               Point {grid_y, grid_x} };
+
             // if the move took place
-            if (_game->move(m))
-            {
-              display();
-              viewing_move_num++;
-              Mix_PlayChannel( 0, _move_sound, 0 );
-              _possible_moves.clear();
-              check_game_over(_win_sound);
+            auto result = handle_move(m);
 
+            if (result == MoveResult::VALID) {
               SDL_Delay(750);
+              handle_move(_ai->move());
+            } 
 
-              if (_ai->move(_game->genAllPossibleOpposing(Color::WHITE))) {
-                display();
-                Mix_PlayChannel( 0, _move_sound, 0 );
-                check_game_over(_lose_sound);
-                viewing_move_num++;
-                
-              } else {
-                // stalemate or draw
-                Mix_PlayChannel(1, _win_sound, 0);
-                SDL_Delay(3000);
-                first = true;
-                _game->reset();
-                viewing_move_num = 0;
-                Mix_PlayChannel(0, _move_sound, 0);
-              }
-            }
+
           }
           clicked.reset(); 
         }
@@ -228,7 +240,7 @@ void App::renderAllPieces() {
    }
 }
 
-void App::displayBoard(Field board)
+void App::displayBoard(Board board)
 {
   SDL_RenderClear(_renderer);
   renderBackground();
@@ -345,61 +357,61 @@ SDL_Texture* App::loadTexture(const char* filepath)
  *****************************************************************************/
 void App::simulate()
 {
-  Game* gm = new Game();
-  AI ai_black(Color::BLACK, AI::MEDIUM, gm);
-  AI ai_white(Color::WHITE, AI::EASY, gm);
+  // Game* gm = new Game();
+  // AI ai_black(Color::BLACK, AI::MEDIUM, gm);
+  // AI ai_white(Color::WHITE, AI::EASY, gm);
 
-  int games = 0;
-  int blackWs = 0;
-  int whiteWs = 0;
-  int draw_stalemate = 0;
-  int move_count = 0; 
-  while (games != 10) {
-   if (ai_white.move(gm->genAllPossibleOpposing(Color::BLACK))) {
-     move_count++;
-     if (gm->isCheckmate()) {
-       whiteWs++; 
-       games++;
-       gm->reset();
-       move_count = 0;
-     }
+  // int games = 0;
+  // int blackWs = 0;
+  // int whiteWs = 0;
+  // int draw_stalemate = 0;
+  // int move_count = 0; 
+  // while (games != 10) {
+  //  if (ai_white.move(gm->genAllPossibleOpposing(Color::BLACK))) {
+  //    move_count++;
+  //    if (gm->isCheckmate()) {
+  //      whiteWs++; 
+  //      games++;
+  //      gm->reset();
+  //      move_count = 0;
+  //    }
 
-   } else {
-    draw_stalemate++;
-    games++;
-       move_count = 0;
-    gm->reset();
-   }
+  //  } else {
+  //   draw_stalemate++;
+  //   games++;
+  //      move_count = 0;
+  //   gm->reset();
+  //  }
 
-   if (ai_black.move(gm->genAllPossibleOpposing(Color::WHITE))) {
-     move_count++;
-     if (gm->isCheckmate()) {
-       blackWs++; 
-       games++;
-       gm->reset();
-       move_count = 0;
-     }
-   } else {
-    draw_stalemate++;
-    games++;
-    gm->reset();
-       move_count = 0;
-   }
-   move_count++;
-   if (move_count > 100) {
-    gm->reset();
-    games++;
-    draw_stalemate ++;
-    move_count = 0;
-   }
-  std::cout << "Games: " << games << "\nWhite wins: " 
-            << whiteWs << "\nBlack Wins " << blackWs <<
-             "\nDraw/Stalemates " << draw_stalemate << "\n";
-  }
+  //  if (ai_black.move(gm->genAllPossibleOpposing(Color::WHITE))) {
+  //    move_count++;
+  //    if (gm->isCheckmate()) {
+  //      blackWs++; 
+  //      games++;
+  //      gm->reset();
+  //      move_count = 0;
+  //    }
+  //  } else {
+  //   draw_stalemate++;
+  //   games++;
+  //   gm->reset();
+  //      move_count = 0;
+  //  }
+  //  move_count++;
+  //  if (move_count > 100) {
+  //   gm->reset();
+  //   games++;
+  //   draw_stalemate ++;
+  //   move_count = 0;
+  //  }
+  // std::cout << "Games: " << games << "\nWhite wins: " 
+  //           << whiteWs << "\nBlack Wins " << blackWs <<
+  //            "\nDraw/Stalemates " << draw_stalemate << "\n";
+  // }
 
-  std::cout << "Games: " << games << "\nWhite wins: " 
-            << whiteWs << "\nBlack Wins " << blackWs <<
-             "\nDraw/Stalemates " << draw_stalemate << "\n";
+  // std::cout << "Games: " << games << "\nWhite wins: " 
+  //           << whiteWs << "\nBlack Wins " << blackWs <<
+  //            "\nDraw/Stalemates " << draw_stalemate << "\n";
 }
 /******************************************************************************
  *

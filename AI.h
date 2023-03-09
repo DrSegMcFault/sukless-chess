@@ -24,11 +24,11 @@ class AI : public ChessUtils {
     Difficulty _difficulty;
     Game* _game;
 
-    bool move(std::vector<Move> possible);
+    Move move();
     bool weak_move(std::vector<Move> possible);
-    bool decent_move(std::vector<Move> possible);
+    Move decent_move(std::vector<Move> possible);
     bool isCapture(Move m);
-    bool isPieceImmune(int x, int y, Field b);
+    bool isPieceImmune(int x, int y, Board b);
     bool isAttacking(Move m);
     int evaluate(Move m);
     int getPieceValue(Piece p);

@@ -37,7 +37,7 @@ std::vector<Move> Game::genThisPossible(Piece p)
  * Method: Game::move(Move, possible moves)
  * this should really return a enum called Result { SUCCESS, FAILURE, CHECKMATE }
  *****************************************************************************/
-bool Game::move(Move m)
+MoveResult Game::move(Move m)
 {
   auto possible_moves = genThisPossible(pieceAt(m.from.x, m.from.y));
 
@@ -50,10 +50,7 @@ bool Game::move(Move m)
 
     _move_count++;
     
-    Game::Field b(_board);
-
-    history.push_back(ChessUtils::board_to_fen(b));
-    std::cout << history[history.size() - 1] << std::endl;
+    history.push_back(ChessUtils::board_to_fen(_board));
 
     if (history.size() >= 3) {
       auto count = 0;
@@ -66,14 +63,15 @@ bool Game::move(Move m)
       // 3 move repetition draw
       if (count >= 3) {
         std::cout << "3 move repetition draw" << std::endl;
-        return false;
+        return MoveResult::DRAW;
       }
     }
-
-    return true;
+    
+    return isCheckmate() ? MoveResult::CHECKMATE : MoveResult::VALID;
   }
   // something other than 3 move repetition, or a valid move
-  return false;
+  std::cout << "invalid move" << std::endl;
+  return MoveResult::INVALID;
 }
 
 /******************************************************************************
@@ -116,7 +114,7 @@ Piece Game::pieceAt(int x, int y)
  * PUBLIC
  * Method: Game::getBoard()
  *****************************************************************************/
-Game::Field Game::getBoard()
+Game::Board Game::getBoard()
 {
   return _board;
 }
@@ -165,7 +163,7 @@ bool Game::resultsInCheck(Move m)
             containsPoint(m.from.x, m.from.y + (2 * y_dir), possible));
   } else {
 
-    Field local(_board);
+    Board local(_board);
     ChessUtils::move(m, local);
 
     possible = GAPM_Opposing(pieceColor, local);

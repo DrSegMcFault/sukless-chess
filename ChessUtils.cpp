@@ -1,9 +1,9 @@
 #include "ChessUtils.h"
 #include <iostream>
+
 /******************************************************************************
  *
- * Method: ChessUtils::genPossibleMvPiece()
- * 
+ * Method: ChessUtils::GPM_Piece(Piece p, const Board&)
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
 std::vector<Move> ChessUtils::GPM_Piece(Piece p, const Board& board)
@@ -219,7 +219,7 @@ std::vector<Move> ChessUtils::GPM_Piece(Piece p, const Board& board)
 
 /******************************************************************************
  *
- * Method: ChessUtils::genAllPossibleOpposing()
+ * Method: ChessUtils::GAPM_Opposing(Color, const Board&)
  * 
  * - generate all possible moves for the opposing color
  *****************************************************************************/
@@ -241,7 +241,7 @@ std::vector<Move> ChessUtils::GAPM_Opposing(Color c, const Board& b)
 
 /******************************************************************************
  *
- * Method: ChessUtils::rookPossible()
+ * Method: ChessUtils::rookPossible(Piece, const Board&)
  *
  *****************************************************************************/
 std::vector<Move> ChessUtils::rookPossible(Piece p, const Board& board )
@@ -316,7 +316,7 @@ std::vector<Move> ChessUtils::rookPossible(Piece p, const Board& board )
 
 /******************************************************************************
  *
- * Method: ChessUtils::bishopPossible()
+ * Method: ChessUtils::bishopPossible(Piece, const Board&)
  *
  *****************************************************************************/
 std::vector<Move> ChessUtils::bishopPossible(Piece p, const Board& board )
@@ -395,7 +395,7 @@ std::vector<Move> ChessUtils::bishopPossible(Piece p, const Board& board )
 
 /******************************************************************************
  *
- * Method: ChessUtils::getKing()
+ * Method: ChessUtils::getKing(Color, const Board&)
  *
  *****************************************************************************/
 Point ChessUtils::getKing(Color c, const Board& b)
@@ -413,9 +413,8 @@ Point ChessUtils::getKing(Color c, const Board& b)
 
 /******************************************************************************
  *
- * Method: ChessUtils::genPossibleMvPiece()
+ * Method: ChessUtils::isColorInCheck(Color, const Board&)
  * 
- * - generate the possible moves for a given piece and board 
  *****************************************************************************/
 const bool ChessUtils::isColorInCheck(Color c, const Board& b)
 {
@@ -429,7 +428,7 @@ const bool ChessUtils::isColorInCheck(Color c, const Board& b)
 
 /******************************************************************************
  *
- * Method: ChessUtils::move()
+ * Method: ChessUtils::move(Move, Board&)
  * 
  * - move a piece to a new location within a given board
  *****************************************************************************/
@@ -490,7 +489,7 @@ void ChessUtils::move(Move m, Board& board)
 
 /******************************************************************************
  *
- * Method: ChessUtils::containsPoint()
+ * Method: ChessUtils::containsPoint(x, y, possible)
  *
  *****************************************************************************/
 bool ChessUtils::containsPoint(int x, int y, std::vector<Move> possible)
@@ -507,8 +506,13 @@ bool ChessUtils::containsPoint(int x, int y, std::vector<Move> possible)
   return false;
 }
 
-// returns the standard FEN representation of the board
-// https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+
+/******************************************************************************
+ * Method: ChessUtils::board_to_fen(x, y, possible)
+ * 
+ * returns the standard FEN representation of the board
+ * https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+ *****************************************************************************/
 std::string ChessUtils::board_to_fen(const Board& b)
 {
   std::string fen = "";
@@ -545,7 +549,12 @@ std::string ChessUtils::board_to_fen(const Board& b)
 
   return fen;
 }
-// returns a board from a FEN string
+
+/******************************************************************************
+ * Method: ChessUtils::fen_to_board(std::string fen)
+ * 
+ * returns a board from a FEN string
+ *****************************************************************************/
 ChessUtils::Board ChessUtils::fen_to_board(std::string fen) {
 
   Board b = std::vector<std::vector<Piece>>(8, std::vector<Piece>(8));
@@ -569,6 +578,11 @@ ChessUtils::Board ChessUtils::fen_to_board(std::string fen) {
   return b;
 }
 
+/******************************************************************************
+ * Method: ChessUtils::fen_to_type(char c)
+ * 
+ * returns the correlated PieceType
+ *****************************************************************************/
 PieceType ChessUtils::fen_to_type(char c) {
   switch (toupper(c)) {
     case 'P':

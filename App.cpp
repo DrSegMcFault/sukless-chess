@@ -117,7 +117,6 @@ void App::run()
     // render the first frame
     if (first) {
       display();
-      auto b = _game->getBoard();
       first = false;
     }
 
@@ -245,6 +244,12 @@ void App::renderAllPieces() {
    }
 }
 
+/******************************************************************************
+ *
+ * Method: App::displayBoard()
+ * 
+ * - render and display the background and pieces 
+ *****************************************************************************/
 void App::displayBoard(const Board& board)
 {
   SDL_RenderClear(_renderer);
@@ -294,9 +299,8 @@ void App::displayPossible()
 
 /******************************************************************************
  *
- * Method: App::display()
+ * Method: App::renderBackground()
  * 
- * - render and display the background
  *****************************************************************************/
 void App::renderBackground()
 {
@@ -339,7 +343,7 @@ void App::renderPiece(SDL_Texture *texture, Piece p)
 
 /******************************************************************************
  *
- * Method: App::App()
+ * Method: App::loadTexture()
  *
  *****************************************************************************/
 SDL_Texture* App::loadTexture(const char* filepath)
@@ -418,6 +422,7 @@ void App::simulate()
   //           << whiteWs << "\nBlack Wins " << blackWs <<
   //            "\nDraw/Stalemates " << draw_stalemate << "\n";
 }
+
 /******************************************************************************
  *
  * Method: App::~App()

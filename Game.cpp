@@ -34,8 +34,7 @@ std::vector<Move> Game::genThisPossible(Piece p)
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::move(Move, possible moves)
- * this should really return a enum called Result { SUCCESS, FAILURE, CHECKMATE }
+ * Method: Game::move(Move m)
  *****************************************************************************/
 MoveResult Game::move(Move m)
 {
@@ -138,7 +137,7 @@ std::vector<Move> Game::genAllPossibleOpposing(Color c)
 
 /******************************************************************************
  *
- * Method: Game::resultsInCheck()
+ * Method: Game::resultsInCheck(Move m)
  *
  * -- given a proposed move, see if that move results in check
  *    for the same color piece

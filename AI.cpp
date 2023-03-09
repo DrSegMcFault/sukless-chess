@@ -33,8 +33,8 @@ Move AI::move()
 }
 
 /******************************************************************************
+ * Method: AI::weak_move(vector<Move>)
  *
- * Method: AI::weak_move()
  * - this is a random move from the list of possible moves 
  *****************************************************************************/
 bool AI::weak_move(std::vector<Move> possible)
@@ -61,7 +61,7 @@ bool AI::weak_move(std::vector<Move> possible)
 
 /******************************************************************************
  *
- * Method: AI::isCheckmate(Move b)
+ * Method: AI::isCheckmate(Board b)
  * - returns true if the given board is in checkmate 
  *****************************************************************************/
 bool AI::isCheckmate(Board b)
@@ -80,9 +80,9 @@ bool AI::isCheckmate(Board b)
 }
 
 /******************************************************************************
+ * Method: AI::evaluate(Move m)
  *
- * Method: AI::evaluate()
- * - returns a score for the given move 
+ * returns a score for the given move 
  *****************************************************************************/
 int AI::evaluate(Move m)
 {
@@ -179,7 +179,7 @@ int AI::evaluate(Move m)
 
 /******************************************************************************
  *
- * Method: AI::weak_move()
+ * Method: AI::decent_move(vector<Move> possible)
  * - this is a random move from the list of possible moves 
  *****************************************************************************/
 Move AI::decent_move(std::vector<Move> possible)
@@ -221,6 +221,11 @@ Move AI::decent_move(std::vector<Move> possible)
   return move;
 }
 
+/******************************************************************************
+ *
+ * Method: AI::getPieceValue(Piece p)
+ * return the associated integer value for the peice
+ *****************************************************************************/
 int AI::getPieceValue(Piece p)
 {
   switch (p.type) {
@@ -238,6 +243,11 @@ int AI::getPieceValue(Piece p)
   }
 }
 
+/******************************************************************************
+ *
+ * Method: AI::isMoveCheck(Piece p)
+ * returns whether or not the proposed move results in check
+ *****************************************************************************/
 bool AI::isMoveCheck(Move m, Board b)
 {
   auto pieceColor = b[m.from.x][m.from.y].Color();
@@ -254,6 +264,11 @@ bool AI::isMoveCheck(Move m, Board b)
   return containsPoint(king.x, king.y, possible);
 }
 
+/******************************************************************************
+ *
+ * Method: AI::isCapture(Move m)
+ * was the move a capture
+ *****************************************************************************/
 bool AI::isCapture(Move m) {
   auto piece_moving = _game->pieceAt(m.from.x, m.from.y);
   auto piece_dest = _game->pieceAt(m.to.x, m.to.y);
@@ -261,6 +276,11 @@ bool AI::isCapture(Move m) {
   return piece_dest && piece_moving.Color() != piece_dest.Color();
 }
 
+/******************************************************************************
+ * Method: AI::isPieceImmmune(x, y, const Board&)
+ *
+ * can the piece be taken
+ *****************************************************************************/
 bool AI::isPieceImmune(int x, int y, const Board& b)
 {
   auto p = b[x][y];
@@ -271,7 +291,12 @@ bool AI::isPieceImmune(int x, int y, const Board& b)
   return true;
 }
 
-Move AI::getRandMove(std::vector<Pair> scores)
+/******************************************************************************
+ * Method: AI::getRandMove(vector<Pair>)
+ * 
+ * Pair - Struct with a move and a score
+ *****************************************************************************/
+Move AI::getRandMove(const std::vector<Pair>& scores)
 {
   if (scores.size() == 1) {
     return scores[0].move;

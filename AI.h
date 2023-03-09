@@ -17,9 +17,6 @@ class AI : public ChessUtils {
       Move move;
     };
 
-    int my_eval;
-    int other_eval;
-
     AI(Color c, Difficulty d, Game* game);
     Difficulty _difficulty;
     Game* _game;
@@ -34,13 +31,13 @@ class AI : public ChessUtils {
     int evaluate(Move m);
     int getPieceValue(Piece p);
     bool isMoveCheck(Move m, Board b);
-    Move getRandMove(std::vector<Pair> pairs);
+    Move getRandMove(const std::vector<Pair>& pairs);
 
   private:
     Color _controlling;
-    
+
     const int pawn_white_p[8][8] = {
-      {900,  900,  900,  900,  900,  900,  900,  900},
+      {900, 900, 900, 900, 900, 900, 900, 900},
       {50, 50, 50, 50, 50, 50, 50, 50},
       {10, 10, 20, 30, 30, 20, 10, 10},
       {5,  5, 10, 25, 25, 10,  5,  5},
@@ -58,7 +55,7 @@ class AI : public ChessUtils {
       {5,  5, 10, 25, 25, 10,  5,  5},
       {10, 10, 20, 30, 30, 20, 10, 10},
       {50, 50, 50, 50, 50, 50, 50, 50},
-      {900,  900,  900,  900,  900,  900,  900,  900}
+      {900, 900, 900, 900, 900, 900, 900, 900}
     };
 
     const int knight_p[8][8] = {
@@ -82,15 +79,4 @@ class AI : public ChessUtils {
       {-10,  5,  0,  0,  0,  0,  5,-10},
       {-20,-10,-10,-10,-10,-10,-10,-20}
     };
-
-    // const int bishop_black_p[8][8] = {
-    //   {-20,-10,-10,-10,-10,-10,-10,-20},
-    //   {-10,  0,  0,  0,  0,  0,  0,-10},
-    //   {-10,  0,  5, 10, 10,  5,  0,-10},
-    //   {-10,  5,  5, 10, 10,  5,  5,-10},
-    //   {-10,  0, 10, 10, 10, 10,  0,-10},
-    //   {-10, 10, 10, 10, 10, 10, 10,-10},
-    //   {-10,  5,  0,  0,  0,  0,  5,-10},
-    //   {-20,-10,-10,-10,-10,-10,-10,-20}
-    // };
 };

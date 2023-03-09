@@ -69,7 +69,14 @@ bool AI::isCheckmate(Board b)
   // my move has taken place
   // generate the other player's possible moves
   // if all the them result in check, then it is checkmate
-  return false;
+  auto opponent_moves = GAPM_Opposing(_controlling, b);
+  for (auto m : opponent_moves) {
+    if (!isMoveCheck(m, b)) {
+      return false;
+    }
+  }
+  std::cout << "AI found checkmate!\n";
+  return true;
 }
 
 /******************************************************************************
@@ -111,6 +118,9 @@ int AI::evaluate(Move m)
 
       if (_game->isColorInCheck(other_color, local) )
       {
+        if (isCheckmate(local)) {
+          return 10000;
+        }
         // if check and immune, very valuable
         if (isPieceImmune(m.to.x, m.to.y, local)) {
           score += 1000;
@@ -206,6 +216,22 @@ int AI::getPieceValue(Piece p)
     default:
       return 0;
   }
+}
+
+bool AI::isMoveCheck(Move m, Board b)
+{
+  auto pieceColor = b[m.from.x][m.from.y].Color();
+
+  std::vector<Move> possible;
+
+  Board local(b);
+  ChessUtils::move(m, local);
+
+  possible = GAPM_Opposing(pieceColor, local);
+
+  auto king = getKing(pieceColor, local);
+
+  return containsPoint(king.x, king.y, possible);
 }
 
 bool AI::isCapture(Move m) {

@@ -1,6 +1,7 @@
 #include "AI.h"
 #include <iostream>
 #include "time.h"
+
 /******************************************************************************
  *
  * Method: AI::AI()
@@ -60,6 +61,19 @@ bool AI::weak_move(std::vector<Move> possible)
 
 /******************************************************************************
  *
+ * Method: AI::isCheckmate(Move b)
+ * - returns true if the given board is in checkmate 
+ *****************************************************************************/
+bool AI::isCheckmate(Board b)
+{
+  // my move has taken place
+  // generate the other player's possible moves
+  // if all the them result in check, then it is checkmate
+  return false;
+}
+
+/******************************************************************************
+ *
  * Method: AI::evaluate()
  * - returns a score for the given move 
  *****************************************************************************/
@@ -114,10 +128,6 @@ int AI::evaluate(Move m)
       if (was_attacked && isPieceImmune(m.to.x, m.to.y, local)){
         score += getPieceValue(_game->pieceAt(m.from.x, m.from.y));
       }
-
-      // if (isAttacking(m) && isPieceImmune(m.to.x, m.to.y, local)) {
-      //   score += getPieceValue(m.from.x,m.from.y);
-      // }
 
       return score;
       break;
@@ -205,7 +215,7 @@ bool AI::isCapture(Move m) {
   return piece_dest && piece_moving.Color() != piece_dest.Color();
 }
 
-bool AI::isPieceImmune(int x, int y, Board b)
+bool AI::isPieceImmune(int x, int y, const Board& b)
 {
   auto p = b[x][y];
   auto possible = GAPM_Opposing(_controlling, b);

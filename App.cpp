@@ -72,7 +72,7 @@ void App::run()
   auto game_over = [&](auto sound) {
   // check for checkmate
     Mix_PlayChannel(1, sound, 0);
-    SDL_Delay(1500);
+    SDL_Delay(2000);
     first = true;
     _game->reset();
     viewing_move_num = 0;
@@ -81,9 +81,9 @@ void App::run()
 
   auto handle_move = [&](auto move) {
     auto result = _game->move(move);
+    display();
     switch (result) {
       case MoveResult::VALID:
-        display();
         viewing_move_num++;
         Mix_PlayChannel( 0, _move_sound, 0 );
         _possible_moves.clear();
@@ -194,6 +194,11 @@ void App::run()
             displayBoard(ChessUtils::fen_to_board(_game->history[++viewing_move_num]));
             break;
           }
+          case SDLK_q:
+          {
+            _state = AppState::EXIT;
+            break;
+          }
         }
 
         break;
@@ -240,7 +245,7 @@ void App::renderAllPieces() {
    }
 }
 
-void App::displayBoard(Board board)
+void App::displayBoard(const Board& board)
 {
   SDL_RenderClear(_renderer);
   renderBackground();

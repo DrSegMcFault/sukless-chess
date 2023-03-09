@@ -40,7 +40,7 @@ class App : public ChessUtils {
     void renderPiece(SDL_Texture* txture, Piece p);
     void renderAllPieces();
     using Board = std::vector<std::vector<Piece>>;
-    void displayBoard(Board p);
+    void displayBoard(const Board& p);
 
     SDL_Texture* loadTexture(const char* filepath);
     void display();

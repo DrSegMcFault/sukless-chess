@@ -25,7 +25,7 @@ std::string Piece::typeToString()
   }
 }
 
-std::string Piece::typeToFEN()
+std::string Piece::typeToFEN() const 
 {
   switch (type) {
     case PAWN:

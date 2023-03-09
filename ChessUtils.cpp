@@ -6,7 +6,7 @@
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-std::vector<Move> ChessUtils::GPM_Piece(Piece p, Field board)
+std::vector<Move> ChessUtils::GPM_Piece(Piece p, Board board)
 {
   Point start = {p.x, p.y};
 
@@ -26,15 +26,17 @@ std::vector<Move> ChessUtils::GPM_Piece(Piece p, Field board)
     case PAWN:
     {
       // if there isnt a piece in front of the pawn, its possible
-      if (!board[p.x - mod][p.y]) {
+      if (validPoint(p.x -mod, p.y) && !board[p.x - mod][p.y]) {
         possible.push_back(Move{start, Point{p.x - mod, p.y}});
       }
 
-      if (board[p.x - mod][p.y - mod] && p.color != board[p.x-mod][p.y-mod].color) {
+      if (validPoint(p.x-mod, p.y-mod) &&
+          board[p.x - mod][p.y - mod] && p.color != board[p.x-mod][p.y-mod].color) {
         possible.push_back(Move {start, Point{p.x - mod, p.y - mod} });
       }
 
-      if (board[p.x - mod][p.y + mod] && p.Color() != board[p.x-mod][p.y+mod].Color()) {
+      if (validPoint(p.x-mod, p.y + mod) && 
+          board[p.x - mod][p.y + mod] && p.Color() != board[p.x-mod][p.y+mod].Color()) {
         possible.push_back(Move {start,Point{p.x - mod, p.y + mod}});
       }
 
@@ -221,7 +223,7 @@ std::vector<Move> ChessUtils::GPM_Piece(Piece p, Field board)
  * 
  * - generate all possible moves for the opposing color
  *****************************************************************************/
-std::vector<Move> ChessUtils::GAPM_Opposing(Color c, Field b)
+std::vector<Move> ChessUtils::GAPM_Opposing(Color c, Board b)
 {
   std::vector<Move> possible;
   for (int i = 0; i < 8; i++) {
@@ -242,7 +244,7 @@ std::vector<Move> ChessUtils::GAPM_Opposing(Color c, Field b)
  * Method: ChessUtils::rookPossible()
  *
  *****************************************************************************/
-std::vector<Move> ChessUtils::rookPossible(Piece p, Field board )
+std::vector<Move> ChessUtils::rookPossible(Piece p, Board board )
 {
   std::vector<Move> possible;
   Point start = {p.x, p.y};
@@ -317,7 +319,7 @@ std::vector<Move> ChessUtils::rookPossible(Piece p, Field board )
  * Method: ChessUtils::bishopPossible()
  *
  *****************************************************************************/
-std::vector<Move> ChessUtils::bishopPossible(Piece p, Field board )
+std::vector<Move> ChessUtils::bishopPossible(Piece p, Board board )
 {
   std::vector<Move> possible;
   Point start = {p.x, p.y};
@@ -396,7 +398,7 @@ std::vector<Move> ChessUtils::bishopPossible(Piece p, Field board )
  * Method: ChessUtils::getKing()
  *
  *****************************************************************************/
-Point ChessUtils::getKing(Color c, Field b )
+Point ChessUtils::getKing(Color c, Board b)
 {
     for (int i = 0; i < 8; i ++) {
       for (int j = 0; j < 8; j++) {
@@ -415,7 +417,7 @@ Point ChessUtils::getKing(Color c, Field b )
  * 
  * - generate the possible moves for a given piece and board 
  *****************************************************************************/
-const bool ChessUtils::isColorInCheck(Color c, Field b)
+const bool ChessUtils::isColorInCheck(Color c, Board b)
 {
   auto otherColor = c == WHITE ? BLACK : WHITE;
   auto possible = GAPM_Opposing(c, b);
@@ -431,7 +433,7 @@ const bool ChessUtils::isColorInCheck(Color c, Field b)
  * 
  * - move a piece to a new location within a given board
  *****************************************************************************/
-void ChessUtils::move(Move m, Field& board)
+void ChessUtils::move(Move m, Board& board)
 {
   auto from_x = m.from.x;
   auto from_y = m.from.y;
@@ -544,9 +546,9 @@ std::string ChessUtils::board_to_fen(Field b)
   return fen;
 }
 // returns a board from a FEN string
-ChessUtils::Field ChessUtils::fen_to_board(std::string fen) {
+ChessUtils::Board ChessUtils::fen_to_board(std::string fen) {
 
-  Field b = std::vector<std::vector<Piece>>(8, std::vector<Piece>(8));
+  Board b = std::vector<std::vector<Piece>>(8, std::vector<Piece>(8));
   int x = 0;
   int y = 0;
   for (auto c : fen) {

@@ -6,14 +6,14 @@
 
 class ChessUtils {
   public:
-    using Field = std::vector<std::vector<Piece>>;
-    std::vector<Move> GPM_Piece(Piece p, Field b);
-    std::vector<Move> GAPM_Opposing(Color c, Field b);
-    std::vector<Move> rookPossible(Piece p, Field b);
-    std::vector<Move> bishopPossible(Piece p, Field b);
-    const bool isColorInCheck(Color c, Field b);
-    Point getKing(Color c, Field b);
-    void move(Move m, Field& b);
+    using Board = std::vector<std::vector<Piece>>;
+    std::vector<Move> GPM_Piece(Piece p, Board b);
+    std::vector<Move> GAPM_Opposing(Color c, Board b);
+    std::vector<Move> rookPossible(Piece p, Board b);
+    std::vector<Move> bishopPossible(Piece p, Board b);
+    const bool isColorInCheck(Color c, Board b);
+    Point getKing(Color c, Board b);
+    void move(Move m, Board& b);
     bool containsPoint(int x, int y, std::vector<Move> possible);
     std::string board_to_fen(Field b);
     Field fen_to_board(std::string fen);

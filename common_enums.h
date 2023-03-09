@@ -17,6 +17,14 @@ enum PieceType {
   KING = 6
 };
 
+enum MoveResult {
+  VALID = 0,
+  INVALID = 1,
+  CHECKMATE = 2,
+  STALEMATE = 3,
+  DRAW = 4
+};
+
 struct Point {
   int x = 0;
   int y = 0;

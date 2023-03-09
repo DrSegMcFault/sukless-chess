@@ -1,5 +1,6 @@
 #include "AI.h"
 #include <iostream>
+#include "time.h"
 /******************************************************************************
  *
  * Method: AI::AI()
@@ -16,16 +17,17 @@ AI::AI(Color to_control, Difficulty d, Game* game)
  * Method: AI::move()
  *
  *****************************************************************************/
-bool AI::move(std::vector<Move> possible)
+Move AI::move()
 {
+  auto possible =
+    _game->genAllPossibleOpposing(_controlling == WHITE ? BLACK : WHITE);
+
   switch (_difficulty) {
+    case EASY:
     case MEDIUM:
-      return decent_move(possible);
     case HARD:
     case IMPOSSIBLE:
-      return weak_move(possible);
-    default:
-      return weak_move(possible);
+      return decent_move(possible);
   }
 }
 
@@ -74,7 +76,7 @@ int AI::evaluate(Move m)
       // in check, and the piece cannot be taken after
       int score = 0;
 
-      Field local(_game->_board);
+      Board local(_game->_board);
 
       bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
 
@@ -140,10 +142,9 @@ int AI::evaluate(Move m)
  * Method: AI::weak_move()
  * - this is a random move from the list of possible moves 
  *****************************************************************************/
-bool AI::decent_move(std::vector<Move> possible)
+Move AI::decent_move(std::vector<Move> possible)
 {
-  bool success = false;
-
+  Move move {0,0,0,0};
   std::vector<Pair> scores = {};
   if (_game->colorMatchesTurn(_controlling)) {
     for (auto move : possible) {
@@ -154,7 +155,8 @@ bool AI::decent_move(std::vector<Move> possible)
   }
 
   if (scores.empty()) {
-    return false;
+    std::cout << "ai has no moves\n";
+    return move;
   }
 
   int best_score = 0;
@@ -169,18 +171,14 @@ bool AI::decent_move(std::vector<Move> possible)
   }
 
   if (best_score <= 0) {
-    int tries = 0;
-    while (!success || tries > scores.size() * 2) {
-      success = _game->move(getRandMove(scores));
-      tries++;
-    }
+    move = getRandMove(scores);
   } else {
-    success = _game->move(scores[best_idx].move);
+    move = scores[best_idx].move;
   }
   
   std::cout << "best score is " << best_score << "\n";
 
-  return success;
+  return move;
 }
 
 int AI::getPieceValue(Piece p)
@@ -207,7 +205,7 @@ bool AI::isCapture(Move m) {
   return piece_dest && piece_moving.Color() != piece_dest.Color();
 }
 
-bool AI::isPieceImmune(int x, int y, Field b)
+bool AI::isPieceImmune(int x, int y, Board b)
 {
   auto p = b[x][y];
   auto possible = GAPM_Opposing(_controlling, b);
@@ -223,6 +221,7 @@ Move AI::getRandMove(std::vector<Pair> scores)
     return scores[0].move;
   } 
   else {
+    srand(time(NULL));
     auto move_idx = rand() % scores.size(); 
     return scores[move_idx].move;
   }

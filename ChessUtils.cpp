@@ -522,7 +522,7 @@ std::string ChessUtils::board_to_fen(const Board& b)
         fen += b[x][y].typeToFEN();
         y++;
       } else {
-        while (!b[x][y] && y < 8) {
+        while (y < 8 && !b[x][y]) {
           empty++;
           y++;
         }

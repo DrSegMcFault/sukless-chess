@@ -270,7 +270,7 @@ void App::displayPossible()
  renderBackground();
 
  renderAllPieces();
- SDL_Rect src = {0,0, 180, 180};
+ SDL_Rect src = {0,0, 30, 30};
  
  for (auto move : _possible_moves) {
     auto x = move.to.x;
@@ -279,8 +279,8 @@ void App::displayPossible()
     SDL_Rect dest = {
               _screenW / 8 * y + 30,
 		          _screenH / 8 * x + 30,
-			        20,
-			        20};
+			        30,
+			        30};
     SDL_RenderCopy(_renderer, _circleTexture, &src, &dest);
  }
 

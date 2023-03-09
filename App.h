@@ -16,8 +16,8 @@ class App : public ChessUtils {
     void simulate();
 
   private:
-    const int _screenW = 640;
-    const int _screenH = 640;
+    const int _screenW = 720;
+    const int _screenH = 720;
     SDL_Window* _window;
     SDL_Renderer* _renderer;
     std::map<std::string, SDL_Texture*> p_textures; 

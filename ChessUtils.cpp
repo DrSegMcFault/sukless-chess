@@ -509,7 +509,7 @@ bool ChessUtils::containsPoint(int x, int y, std::vector<Move> possible)
 
 // returns the standard FEN representation of the board
 // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
-std::string ChessUtils::board_to_fen(Field b)
+std::string ChessUtils::board_to_fen(Board b)
 {
   std::string fen = "";
   int empty = 0;

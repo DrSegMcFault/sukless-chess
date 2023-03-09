@@ -15,8 +15,8 @@ class ChessUtils {
     Point getKing(Color c, Board b);
     void move(Move m, Board& b);
     bool containsPoint(int x, int y, std::vector<Move> possible);
-    std::string board_to_fen(Field b);
-    Field fen_to_board(std::string fen);
+    std::string board_to_fen(Board b);
+    Board fen_to_board(std::string fen);
     PieceType fen_to_type(char c);
 
     constexpr bool validPoint(int x, int y) const {

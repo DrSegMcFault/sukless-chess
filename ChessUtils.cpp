@@ -47,6 +47,19 @@ std::vector<Move> ChessUtils::GPM_Piece(Piece p, const Board& board)
      {
        possible.push_back(Move {start,Point{p.x - mod*2, p.y} });
      }
+
+     // en passant
+    //  if (en_pass_enabled) {
+    //    if (board[p.x][p.y - 1] && board[p.x][p.y - 1].type == PAWN
+    //        && board[p.x][p.y - 1].color != p.color) 
+    //   {
+    //     possible.push_back(Move {start, Point {p.x - mod, p.y - 1} });
+    //   } else if (board[p.x][p.y + 1] && board[p.x][p.y + 1].type == PAWN
+    //        && board[p.x][p.y + 1].color != p.color) 
+    //   {
+    //     possible.push_back(Move {start, Point {p.x - mod, p.y + 1} });
+    //   }
+    //  }
      break;
    }
 
@@ -424,67 +437,6 @@ const bool ChessUtils::isColorInCheck(Color c, const Board& b)
   auto king = getKing(c, b);
 
   return containsPoint(king.x, king.y, possible);
-}
-
-/******************************************************************************
- *
- * Method: ChessUtils::move(Move, Board&)
- * 
- * - move a piece to a new location within a given board
- *****************************************************************************/
-void ChessUtils::move(Move m, Board& board)
-{
-  auto from_x = m.from.x;
-  auto from_y = m.from.y;
-  auto to_x = m.to.x;
-  auto to_y = m.to.y;
-
-  if (from_x == to_x && from_y == to_y) {
-    return;
-  }
-  
-  auto dx = abs(to_x - from_x);
-  auto dy = abs(to_y - from_y);
-  bool is_castle = dy == 2 && board[from_x][from_y].type == KING;
-  
-  // copy constructor desperately needed
-  board[to_x][to_y].prev_x = from_x; 
-  board[to_x][to_y].prev_y = from_y; 
-  board[to_x][to_y].x = to_x;
-  board[to_x][to_y].y = to_y;
-  board[to_x][to_y].type = board[from_x][from_y].type;
-  board[to_x][to_y].color = board[from_x][from_y].color;
-  board[to_x][to_y].icon = board[from_x][from_y].icon;
-  board[to_x][to_y].has_moved = true; 
-  board[from_x][from_y].Clear();
-
-  // auto promote to queen
-  if (board[to_x][to_y].type == PAWN &&
-      (to_x == 0 || to_x == 7))
-  {
-    board[to_x][to_y].type = QUEEN;
-    board[to_x][to_y].icon = "resources/queen_" +
-                             board[to_x][to_y].colorToString() +
-                             ".png";
-  }
-
-  if (is_castle) {
-    auto dx = to_x - from_x;
-    auto dy = to_y - from_y;
-    auto king_x = to_x;
-    auto king_y = to_y;
-
-    // if the difference in y is positive, its a king side castle
-    // move the rook to the correct position
-    if (dy > 0) {
-      move(Move {Point {king_x, king_y + 1} , Point {king_x, king_y -1}},
-           board);
-    } else {
-      // queen side castle
-      move(Move {Point {king_x, king_y - 2} , Point {king_x, king_y + 1} },
-           board);
-    } 
-  }
 }
 
 /******************************************************************************

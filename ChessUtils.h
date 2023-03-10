@@ -7,14 +7,11 @@
 class ChessUtils {
   public:
     using Board = std::vector<std::vector<Piece>>;
-
     std::vector<Move> GPM_Piece(Piece p, const Board& b);
     std::vector<Move> GAPM_Opposing(Color c, const Board& b);
     std::vector<Move> rookPossible(Piece p, const Board& b);
     std::vector<Move> bishopPossible(Piece p, const Board& b);
 
-
-    void move(Move m, Board& b);
     bool containsPoint(int x, int y, std::vector<Move> possible);
     const bool isColorInCheck(Color c, const Board& b);
     Point getKing(Color c, const Board& b);

@@ -76,7 +76,7 @@ int AI::evaluate(Move m)
       auto piece_from = _game->pieceAt(m.from.x, m.from.y);
 
       // below this is the result of 1 move
-      ChessUtils::move(m, local);
+      _game->do_move(m, local);
 
       auto other_color = _controlling == WHITE ? BLACK : WHITE;
 
@@ -113,8 +113,6 @@ int AI::evaluate(Move m)
         score += getPieceValue(piece_from);
       }
 
-      // currently a hack for early game pawn movement
-      // TODO: all other piece types
       if (isPieceImmune(m.to.x, m.to.y, local)) {
         if (piece_from.type == PAWN) {
           switch (piece_from.Color()) {
@@ -228,7 +226,8 @@ bool AI::isMoveCheck(Move m, Board b)
   std::vector<Move> possible;
 
   Board local(b);
-  ChessUtils::move(m, local);
+
+  auto res = _game->do_move(m, local);
 
   possible = GAPM_Opposing(pieceColor, local);
 

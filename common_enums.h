@@ -34,3 +34,12 @@ struct Move {
   Point from;
   Point to;
 };
+
+enum MoveType {
+  NORMAL = 0,
+  Q_SIDE_CASTLE = 1,
+  K_SIDE_CASTLE = 2,
+
+  // next move can be en passant
+  EN_PASSANT = 3
+};

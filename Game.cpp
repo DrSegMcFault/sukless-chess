@@ -43,9 +43,27 @@ MoveResult Game::move(Move m)
   if (containsPoint(m.to.x, m.to.y, possible_moves) &&
       !resultsInCheck(m))
   {
-    ChessUtils::move(m, _board);
+    auto move_type = do_move(m, _board);
+
+    switch(move_type) {
+      case MoveType::NORMAL:
+        // do nothing
+        break;
+      case MoveType::K_SIDE_CASTLE:
+        // update the FEN castling rights
+        break;
+      case MoveType::Q_SIDE_CASTLE:
+        // update the FEN castling rights
+        break;
+      case MoveType::EN_PASSANT:
+        // update the fen en passant target square 
+        _en_passant_enabled = true;
+        break;
+    }
 
     _isWhiteTurn = !_isWhiteTurn;
+
+    // update the FEN turn here
 
     _move_count++;
     
@@ -69,6 +87,87 @@ MoveResult Game::move(Move m)
   }
   // something other than 3 move repetition, checkmate or a valid move
   return MoveResult::INVALID;
+}
+
+/******************************************************************************
+ *
+ * Method: Game::do_move(Move, Board)
+ * 
+ * - performs the move and returns the type of move
+ *****************************************************************************/
+MoveType Game::do_move(Move m, Board &board)
+{
+  auto from_x = m.from.x;
+  auto from_y = m.from.y;
+  auto to_x = m.to.x;
+  auto to_y = m.to.y;
+
+  auto dx = abs(to_x - from_x);
+  auto dy = abs(to_y - from_y);
+  bool is_castle = dy == 2 && board[from_x][from_y].type == KING;
+  auto mod = board[from_x][from_y].color == WHITE ? 1 : -1;
+
+  board[to_x][to_y].prev_x = from_x; 
+  board[to_x][to_y].prev_y = from_y; 
+  board[to_x][to_y].x = to_x;
+  board[to_x][to_y].y = to_y;
+  board[to_x][to_y].type = board[from_x][from_y].type;
+  board[to_x][to_y].color = board[from_x][from_y].color;
+  board[to_x][to_y].icon = board[from_x][from_y].icon;
+  board[to_x][to_y].has_moved = true; 
+  board[from_x][from_y].Clear();
+  
+  // auto promote to queen
+  if (board[to_x][to_y].type == PAWN &&
+      (to_x == 0 || to_x == 7))
+  {
+    board[to_x][to_y].type = QUEEN;
+    board[to_x][to_y].icon = "resources/queen_" +
+                             board[to_x][to_y].colorToString() +
+                             ".png";
+  }
+
+  if (is_castle) {
+    auto dx = to_x - from_x;
+    auto dy = to_y - from_y;
+    auto king_x = to_x;
+    auto king_y = to_y;
+
+    // if the difference in y is positive, its a king side castle
+    // move the rook to the correct position
+    if (dy > 0) {
+      do_move(Move { Point {king_x, king_y + 1} , Point {king_x, king_y - 1} },
+           board);
+      return MoveType::K_SIDE_CASTLE;
+    } else {
+      // queen side castle
+      do_move(Move { Point {king_x, king_y - 2} , Point {king_x, king_y + 1} },
+           board);
+      return MoveType::Q_SIDE_CASTLE;
+    } 
+  }
+
+  // this will let use know that we can en_passant on the next move
+  if (board[to_x][to_y].type == PAWN &&
+      (dx == 2))
+  {
+    if (validPoint(to_x, to_y - 1)) {
+
+      if (board[to_x][to_y - 1].type == PAWN ) {
+        return MoveType::EN_PASSANT;
+      }
+
+    } else if (validPoint(to_x, to_y + 1)) {
+
+      if (board[to_x][to_y + 1].type == PAWN) {
+        return MoveType::EN_PASSANT;
+      }
+
+    }
+  }
+
+
+  return MoveType::NORMAL;
 }
 
 /******************************************************************************
@@ -170,7 +269,7 @@ bool Game::resultsInCheck(Move m)
   } else {
 
     Board local(_board);
-    ChessUtils::move(m, local);
+    auto res = do_move(m, local);
 
     possible = GAPM_Opposing(pieceColor, local);
 

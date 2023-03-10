@@ -21,6 +21,7 @@ class Game : public ChessUtils {
 
     // try and move if true, the move took place
     MoveResult move(Move m);
+    MoveType do_move(Move m, Board& b);
 
     Piece pieceAt(int x, int y);
 
@@ -40,6 +41,6 @@ class Game : public ChessUtils {
     std::vector<std::string> _history;
 
     void initBoard();
-
+    bool _en_passant_enabled = false;
     bool _isWhiteTurn = true;
 };

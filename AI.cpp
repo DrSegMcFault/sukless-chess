@@ -33,33 +33,6 @@ Move AI::move()
 }
 
 /******************************************************************************
- * Method: AI::weak_move(vector<Move>)
- *
- * - this is a random move from the list of possible moves 
- *****************************************************************************/
-bool AI::weak_move(std::vector<Move> possible)
-{
-  bool success = false;
-  if (possible.size() == 0) {
-    return false;
-  }
-  if (possible.size() == 1) {
-    success = _game->move(possible.at(0));
-  } 
-  else {
-    auto move_idx = rand() % possible.size(); 
-    int tries = 0;
-      while (!success || tries < possible.size() * 2) {
-        success = _game->move(possible.at(move_idx));
-        move_idx = rand() % possible.size();
-        tries++;
-      }
-  }
-
-  return success;
-}
-
-/******************************************************************************
  *
  * Method: AI::isCheckmate(Board b)
  * - returns true if the given board is in checkmate 
@@ -97,7 +70,7 @@ int AI::evaluate(Move m)
       // in check, and the piece cannot be taken after
       int score = 0;
 
-      Board local(_game->_board);
+      Board local(_game->getBoard());
 
       bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
       auto piece_from = _game->pieceAt(m.from.x, m.from.y);
@@ -117,7 +90,7 @@ int AI::evaluate(Move m)
         score += 5 + val_capture;
       }
 
-      if (_game->isColorInCheck(other_color, local) )
+      if (isColorInCheck(other_color, local))
       {
         if (isCheckmate(local)) {
           return 10000;
@@ -285,7 +258,7 @@ bool AI::isPieceImmune(int x, int y, const Board& b)
 {
   auto p = b[x][y];
   auto possible = GAPM_Opposing(_controlling, b);
-  if (_game->containsPoint(p.x, p.y, possible)) {
+  if (containsPoint(p.x, p.y, possible)) {
     return false;
   }
   return true;

@@ -18,15 +18,16 @@ class App : public ChessUtils {
   private:
     const int _screenW = 720;
     const int _screenH = 720;
+
     SDL_Window* _window;
     SDL_Renderer* _renderer;
-    std::map<std::string, SDL_Texture*> p_textures; 
     SDL_Texture* _circleTexture;
     Mix_Chunk* _move_sound;
     Mix_Chunk* _win_sound;
     Mix_Chunk* _lose_sound;
+    std::map<std::string, SDL_Texture*> p_textures;
+
     std::vector<Move> _possible_moves;
-    AI* _ai;
 
     enum AppState {
       PLAY = 0,
@@ -36,14 +37,16 @@ class App : public ChessUtils {
     AppState _state;
 
     Game* _game;
+    AI* _ai;
 
-    void renderPiece(SDL_Texture* txture, Piece p);
-    void renderAllPieces();
     using Board = std::vector<std::vector<Piece>>;
-    void displayBoard(const Board& p);
 
     SDL_Texture* loadTexture(const char* filepath);
+
     void display();
-    void renderBackground();
+    void displayBoard(const Board& p);
     void displayPossible();
+    void renderBackground();
+    void renderPiece(SDL_Texture* txture, Piece p);
+    void renderAllPieces();
 };

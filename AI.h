@@ -18,11 +18,14 @@ class AI : public ChessUtils {
     };
 
     AI(Color c, Difficulty d, Game* game);
-    Difficulty _difficulty;
-    Game* _game;
 
     Move move();
-    bool weak_move(std::vector<Move> possible);
+
+
+  private:
+    Color _controlling;
+    Game* _game;
+    Difficulty _difficulty;
     Move decent_move(std::vector<Move> possible);
     bool isCapture(Move m);
     bool isPieceImmune(int x, int y, const Board& b);
@@ -32,9 +35,6 @@ class AI : public ChessUtils {
     int getPieceValue(Piece p);
     bool isMoveCheck(Move m, Board b);
     Move getRandMove(const std::vector<Pair>& pairs);
-
-  private:
-    Color _controlling;
 
     const int pawn_white_p[8][8] = {
       {900, 900, 900, 900, 900, 900, 900, 900},

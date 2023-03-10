@@ -12,10 +12,6 @@ class Game : public ChessUtils {
 
     using Board = std::vector<std::vector<Piece>>;
 
-    Board _board;
-    uint32_t _move_count = 0;
-    std::vector<Move> possible_moves;
-    std::vector<std::string> history;
 
     bool isCheckmate();
     bool resultsInCheck(Move m);
@@ -30,13 +26,20 @@ class Game : public ChessUtils {
 
     Board getBoard();
 
+    const std::string historyAt(int index);
+
     const bool colorMatchesTurn(Color c);
     std::vector<Move> genAllPossibleOpposing(Color c);
 
+    const uint32_t MoveCount() const {return _move_count;};
+
   private:
 
-    void initBoard();
-    bool _isWhiteTurn = true;
+    Board _board;
+    uint32_t _move_count = 0;
+    std::vector<std::string> _history;
 
-    friend class ChessAI;
+    void initBoard();
+
+    bool _isWhiteTurn = true;
 };

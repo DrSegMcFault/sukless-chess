@@ -49,13 +49,13 @@ MoveResult Game::move(Move m)
 
     _move_count++;
     
-    history.push_back(ChessUtils::board_to_fen(_board));
+    _history.push_back(ChessUtils::board_to_fen(_board));
 
-    if (history.size() >= 3) {
+    if (_history.size() >= 3) {
       auto count = 0;
-      auto last = history[history.size() - 1]; 
-      for (int i = 0; i < history.size() - 2; i++) {
-        if (history[i].compare(last) == 0) {
+      auto last = _history[_history.size() - 1]; 
+      for (int i = 0; i < _history.size() - 2; i++) {
+        if (_history[i].compare(last) == 0) {
           count++;
         }
       }
@@ -67,7 +67,7 @@ MoveResult Game::move(Move m)
     
     return isCheckmate() ? MoveResult::CHECKMATE : MoveResult::VALID;
   }
-  // something other than 3 move repetition, or a valid move
+  // something other than 3 move repetition, checkmate or a valid move
   return MoveResult::INVALID;
 }
 
@@ -114,6 +114,15 @@ Piece Game::pieceAt(int x, int y)
 Game::Board Game::getBoard()
 {
   return _board;
+}
+
+/******************************************************************************
+ * PUBLIC
+ * Method: Game::historyAt(int index)
+ *****************************************************************************/
+const std::string Game::historyAt(int index)
+{
+  return _history.at(index);
 }
 
 /******************************************************************************
@@ -228,8 +237,8 @@ void Game::initBoard()
     }
   }
 
-  history.clear();
+  _history.clear();
   _isWhiteTurn = true;
   _move_count = 0;
-  history.push_back(ChessUtils::board_to_fen(_board));
+  _history.push_back(ChessUtils::board_to_fen(_board));
 }

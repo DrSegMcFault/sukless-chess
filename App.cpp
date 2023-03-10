@@ -136,7 +136,7 @@ void App::run()
         auto y = ev.button.y;
         int grid_x = floor(x / (_screenH / 8));
         int grid_y = floor(y / (_screenW / 8));
-        viewing_move_num = _game->_move_count;
+        viewing_move_num = _game->MoveCount();
 
         // get the piece that was clicked on
         if (!clicked.has_value()) {
@@ -181,16 +181,22 @@ void App::run()
             if (viewing_move_num - 1 < 0) {
               break;
             }
-            displayBoard(ChessUtils::fen_to_board(_game->history[--viewing_move_num]));
+
+            displayBoard(
+              ChessUtils::fen_to_board(_game->historyAt(--viewing_move_num)));
+
             break;
           }
           case SDLK_RIGHT:
           {
             // go forward in move history
-            if (viewing_move_num + 1 > _game->_move_count) {
+            if (viewing_move_num + 1 > _game->MoveCount()) {
               break;
             }
-            displayBoard(ChessUtils::fen_to_board(_game->history[++viewing_move_num]));
+
+            displayBoard(
+              ChessUtils::fen_to_board(_game->historyAt(++viewing_move_num)));
+
             break;
           }
           case SDLK_q:

@@ -22,6 +22,7 @@ class AI {
 
     Move move();
 
+    int getPieceValue(Piece p);
 
   private:
     Color _controlling;
@@ -30,9 +31,7 @@ class AI {
 
     Move decent_move(std::vector<Move> possible);
     bool isCapture(Move m);
-    bool isPieceImmune(int x, int y, const Board& b);
     int evaluate(Move m);
-    int getPieceValue(Piece p);
     Move getRandMove(const std::vector<Pair>& pairs);
 
     const int pawn_white_p[8][8] = {

@@ -21,7 +21,7 @@ AI::AI(Color to_control, Difficulty d, BoardManager* game)
 Move AI::move()
 {
   auto possible =
-    _game->genAllPossibleOpposing(_controlling == WHITE ? BLACK : WHITE);
+    _game->genPossibleOpposing(_controlling == WHITE ? BLACK : WHITE);
 
   switch (_difficulty) {
     case EASY:
@@ -47,69 +47,81 @@ int AI::evaluate(Move m)
     case MEDIUM:
     {
       // the 'best' move is to take a piece, put the other player
-      // in check, and the piece cannot be taken after
+      // in check, and the piece cannot be taken after, OR Checkmate
       int score = 0;
 
-      Board local(_game->getBoard());
-
-      bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
+      bool was_attacked = _game->containsPoint(m.from.x, m.from.y,
+                                               _game->genPossibleOpposing(_controlling));
       auto piece_from = _game->pieceAt(m.from.x, m.from.y);
+      
+      // a copy of the game state, board included
+      BoardManager game_cpy(_game->board_to_fen());
 
       // below this is the result of 1 move
-      _game->do_move(m);
+      switch ( game_cpy.move(m) ) {
+        case CHECKMATE:
+          return 10000;
+        case INVALID:
+          return -10000;
+        case DRAW:
+          return 0;
+        default:
+          break;
+      }
 
       auto other_color = _controlling == WHITE ? BLACK : WHITE;
+      auto opponent_moves = game_cpy.genPossibleOpposing(_controlling);
+
+      auto isPieceImmune = [&,&opponent_moves=opponent_moves](int x, int y) {
+        return !game_cpy.containsPoint(x, y, opponent_moves);
+      };
 
       if (isCapture(m)) {
         int val_capture = getPieceValue(_game->pieceAt(m.to.x, m.to.y));
 
-        if (isPieceImmune(m.to.x, m.to.y, local)) {
+        if (isPieceImmune(m.to.x, m.to.y)) {
           score += 300;
         }
          
         score += 5 + val_capture;
       }
 
-      if (_game->isColorInCheck(other_color))
+      if (game_cpy.isColorInCheck(other_color))
       {
-        if (_game->isCheckmate()) {
-          return 10000;
-        }
         // if check and immune, very valuable
-        if (isPieceImmune(m.to.x, m.to.y, local)) {
-          score += 1000;
+        if (isPieceImmune(m.to.x, m.to.y)) {
+          score += 50;
         }
         score += 50;
       }
 
-      if (!isPieceImmune(m.to.x, m.to.y, local)) {
+      if (!isPieceImmune(m.to.x, m.to.y)) {
         score -= getPieceValue(_game->pieceAt(m.from.x, m.from.y));;
       }
 
       // If the piece was under attack and a retreating
       // square is available, the move is equal to the
       // pieces value
-      if (was_attacked && isPieceImmune(m.to.x, m.to.y, local)){
+      if (was_attacked && isPieceImmune(m.to.x, m.to.y)){
         score += getPieceValue(piece_from);
       }
 
-      if (isPieceImmune(m.to.x, m.to.y, local)) {
-        if (piece_from.type == PAWN) {
-          switch (piece_from.Color()) {
-            case WHITE:
-              score += pawn_white_p[m.to.x][m.to.y];
-              break;
-            case BLACK:
-              score += pawn_black_p[m.to.x][m.to.y];
-              break;
-            default:
-              break;
-          }
-        } else if (piece_from.type == KNIGHT) {
-          score += knight_p[m.to.x][m.to.y];
+      // add positional value, if applicable
+      if (piece_from.type == PAWN) {
+        switch (piece_from.Color()) {
+          case WHITE:
+            score += pawn_white_p[m.to.x][m.to.y];
+            break;
+          case BLACK:
+            score += pawn_black_p[m.to.x][m.to.y];
+            break;
+          default:
+            break;
         }
-
+      } else if (piece_from.type == KNIGHT) {
+        score += knight_p[m.to.x][m.to.y];
       }
+
       return score;
       break;
     }
@@ -163,6 +175,7 @@ Move AI::decent_move(std::vector<Move> possible)
 
   if (best_score <= 0) {
     move = getRandMove(scores);
+    std::cout << "Random move\n";
   } else {
     move = scores[best_idx].move;
   }
@@ -204,21 +217,6 @@ bool AI::isCapture(Move m) {
   auto piece_dest = _game->pieceAt(m.to.x, m.to.y);
 
   return piece_dest && piece_moving.Color() != piece_dest.Color();
-}
-
-/******************************************************************************
- * Method: AI::isPieceImmmune(x, y, const Board&)
- *
- * can the piece be taken
- *****************************************************************************/
-bool AI::isPieceImmune(int x, int y, const Board& b)
-{
-  auto p = b[x][y];
-  auto possible = GAPM_Opposing(_controlling, b);
-  if (_game->containsPoint(p.x, p.y, possible)) {
-    return false;
-  }
-  return true;
 }
 
 /******************************************************************************

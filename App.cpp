@@ -146,7 +146,7 @@ void App::run()
             if (_game->colorMatchesTurn(this_piece.Color()))
             {
               clicked = this_piece;
-              _possible_moves = _game->genThisPossible(this_piece);
+              _possible_moves = _game->genPossible(this_piece);
               displayPossible();
             }
           }
@@ -382,7 +382,7 @@ void App::simulate()
   // int draw_stalemate = 0;
   // int move_count = 0; 
   // while (games != 10) {
-  //  if (ai_white.move(gm->genAllPossibleOpposing(Color::BLACK))) {
+  //  if (ai_white.move(gm->genPossibleOpposing(Color::BLACK))) {
   //    move_count++;
   //    if (gm->isCheckmate()) {
   //      whiteWs++; 
@@ -398,7 +398,7 @@ void App::simulate()
   //   gm->reset();
   //  }
 
-  //  if (ai_black.move(gm->genAllPossibleOpposing(Color::WHITE))) {
+  //  if (ai_black.move(gm->genPossibleOpposing(Color::WHITE))) {
   //    move_count++;
   //    if (gm->isCheckmate()) {
   //      blackWs++; 

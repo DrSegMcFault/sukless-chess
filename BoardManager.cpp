@@ -1,5 +1,7 @@
 #include "BoardManager.h"
 #include <iostream>
+#include <sstream>
+#include <assert.h>
 
 /******************************************************************************
  *
@@ -19,6 +21,7 @@ BoardManager::BoardManager()
  *****************************************************************************/
 BoardManager::BoardManager(std::string fen)
 {
+  _board = std::vector<std::vector<Piece>>(8, std::vector<Piece>(8, Piece()));
   fen_to_state(fen);
 }
 
@@ -34,10 +37,10 @@ void BoardManager::reset()
 
 /******************************************************************************
  * PUBLIC
- * Method: BoardManager::genThisPossible()
+ * Method: BoardManager::genPossible()
  * - returns the possible moves for this piece
  *****************************************************************************/
-std::vector<Move> BoardManager::genThisPossible(Piece p)
+std::vector<Move> BoardManager::genPossible(Piece p)
 {
   return GPM_Piece(p);
 }
@@ -48,15 +51,29 @@ std::vector<Move> BoardManager::genThisPossible(Piece p)
  *****************************************************************************/
 MoveResult BoardManager::move(Move m)
 {
-  auto possible_moves = genThisPossible(pieceAt(m.from.x, m.from.y));
+  auto possible_moves = genPossible(pieceAt(m.from.x, m.from.y));
 
   if (containsPoint(m.to.x, m.to.y, possible_moves) &&
       !resultsInCheck(m))
   {
-    if (do_move(m) == MoveType::ENABLE_PASSANT) {
+    auto result = do_move(m);
+
+    if (result == MoveType::ENABLE_PASSANT) {
       _en_passant_enabled = true;
-      auto mod = _isWhiteTurn ? 1 : -1;
+      auto mod = _isWhiteTurn ? -1 : 1;
       _passant_target = Point(m.to.x - mod, m.to.y);
+    } else if (result == MoveType::PERFORM_PASSANT && !_en_passant_enabled){
+      assert(false);
+
+    } else if (_en_passant_enabled && result != MoveType::PERFORM_PASSANT ) {
+      _en_passant_enabled = false;
+      _passant_target = Point {-1, -1};
+    } else if (result == MoveType::PERFORM_PASSANT && _en_passant_enabled) {
+      _en_passant_enabled = false;
+      _passant_target = Point {-1, -1};
+      // do the actual logic to clear the piece we took
+      auto mod = _isWhiteTurn ? -1 : 1;
+      _board[m.to.x - mod][m.to.y].Clear();
     }
 
     // black is moving, increment the full move count
@@ -108,6 +125,7 @@ BoardManager::MoveType BoardManager::do_move(Move m)
   bool is_castle = dy == 2 && _board[from_x][from_y].type == KING;
   auto mod = _board[from_x][from_y].color == WHITE ? 1 : -1;
 
+  // move contsructor?
   _board[to_x][to_y].prev_x = from_x;
   _board[to_x][to_y].prev_y = from_y;
   _board[to_x][to_y].x = to_x;
@@ -126,6 +144,15 @@ BoardManager::MoveType BoardManager::do_move(Move m)
     _board[to_x][to_y].icon = "resources/queen_" +
                              _board[to_x][to_y].colorToString() +
                              ".png";
+  }
+
+  // en passant move, if the piece is a pawn and the difference in x and y is 1
+  // and there isnt a piece there, then we can perform the passant move
+  if (_board[to_x][to_y].type == PAWN &&
+      (dx == 1 && dy == 1) &&
+      !_board[to_x][to_y])
+  {
+    return MoveType::PERFORM_PASSANT;
   }
 
   if (is_castle) {
@@ -150,19 +177,7 @@ BoardManager::MoveType BoardManager::do_move(Move m)
   if (_board[to_x][to_y].type == PAWN &&
       (dx == 2))
   {
-    if (validPoint(to_x, to_y - 1)) {
-
-      if (_board[to_x][to_y - 1].type == PAWN ) {
-        return MoveType::ENABLE_PASSANT;
-      }
-
-    } else if (validPoint(to_x, to_y + 1)) {
-
-      if (_board[to_x][to_y + 1].type == PAWN) {
-        return MoveType::ENABLE_PASSANT;
-      }
-
-    }
+    return MoveType::ENABLE_PASSANT;
   }
 
   return MoveType::NORMAL;
@@ -176,7 +191,7 @@ BoardManager::MoveType BoardManager::do_move(Move m)
 bool BoardManager::isCheckmate()
 {
   const auto cur_player_color = _isWhiteTurn ? WHITE : BLACK;
-  
+
   // check if all the possible moves for the current player result in check
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
@@ -236,7 +251,7 @@ const bool BoardManager::colorMatchesTurn(Color c)
  * PUBLIC
  * Method: BoardManager::colorMatchesTurn(Color)
  *****************************************************************************/
-std::vector<Move> BoardManager::genAllPossibleOpposing(Color c)
+std::vector<Move> BoardManager::genPossibleOpposing(Color c)
 {
   return GAPM_Opposing(c);
 }
@@ -251,7 +266,6 @@ std::vector<Move> BoardManager::genAllPossibleOpposing(Color c)
 bool BoardManager::resultsInCheck(Move m)
 {
   auto pieceColor = _board[m.from.x][m.from.y].Color();
-
   std::vector<Move> possible;
   auto dy_pos = abs(m.from.y - m.to.y);
 
@@ -265,14 +279,29 @@ bool BoardManager::resultsInCheck(Move m)
             containsPoint(m.from.x, m.from.y + (1 * y_dir), possible) ||
             containsPoint(m.from.x, m.from.y + (2 * y_dir), possible));
   } else {
+     
+    auto prev_fen = board_to_fen();
+    auto prev_history = _history;
+    auto prev_board(_board);
 
-    Board local(_board);
+    do_move(m);
 
     possible = GAPM_Opposing(pieceColor);
 
     auto king = getKing(pieceColor);
 
-    return containsPoint(king.x, king.y, possible);
+    auto res = containsPoint(king.x, king.y, possible);
+
+    // undo the move
+    fen_to_state(prev_fen);
+
+    // this is neseccary because FEN doesnt contain
+    // info about pieces that have or havent moved,
+    // and nothing about history obviously
+    _board = prev_board;
+    _history = prev_history;
+
+    return res;
   }
 }
 
@@ -395,6 +424,13 @@ std::string BoardManager::board_to_fen()
   } 
   else { 
 
+    if (pieceAt(0,7).type == ROOK &&
+        !pieceAt(0, 7).has_moved &&
+        !pieceAt(black_king.x, black_king.y).has_moved)
+    {
+      fen += "K";
+    }
+
     if (pieceAt(0,0).type == ROOK &&
         !pieceAt(0, 0).has_moved &&
         !pieceAt(black_king.x, black_king.y).has_moved)
@@ -402,11 +438,12 @@ std::string BoardManager::board_to_fen()
       fen += "Q";
     }
 
-    if (pieceAt(0,7).type == ROOK &&
-        !pieceAt(0, 7).has_moved &&
-        !pieceAt(black_king.x, black_king.y).has_moved)
+
+    if (pieceAt(7,7).type == ROOK &&
+        !pieceAt(7, 7).has_moved &&
+        !pieceAt(white_king.x, white_king.y).has_moved)
     {
-      fen += "K";
+      fen += "k";
     }
 
     if (pieceAt(7,0).type == ROOK &&
@@ -416,17 +453,18 @@ std::string BoardManager::board_to_fen()
       fen += "q";
     }
 
-    if (pieceAt(7,7).type == ROOK &&
-        !pieceAt(7, 7).has_moved &&
-        !pieceAt(white_king.x, white_king.y).has_moved)
-    {
-      fen += "k";
-    }
   }
 
   fen += " ";
-  
+
   // en passant target square
+  if (validPoint(_passant_target.x , _passant_target.y) &&
+      _en_passant_enabled)
+  {
+    fen += point_to_fen(_passant_target) + " ";
+  } else {
+    fen += "- ";
+  }
 
   // halfmove clock
   fen += std::to_string(_half_move_count) + " ";
@@ -445,19 +483,29 @@ std::string BoardManager::board_to_fen()
  *****************************************************************************/
 void BoardManager::fen_to_state(std::string fen)
 {
-  std::cout << "Fen to state: " << fen << "\n";
+  // split the string on whitespace and return the vector of strings
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(fen);
 
-  _board = fen_to_board(fen);
+  while (std::getline(tokenStream, token, ' '))
+  {
+    tokens.push_back(token);
+  }
+   
+  assert(tokens.size() == 6);
 
-  // just tokenize the fen and get by known indices
-  _isWhiteTurn = fen[fen.find(" ") + 1] == 'w' ? true : false;
+  // assuming copillot is correct
+  _board = fen_to_board(tokens[0]);
+  _isWhiteTurn = tokens[1] == "w" ? true : false;
 
-  auto str = fen.substr(fen.find_last_of(" ") + 1);
-  _move_count = std::stoi(str);
+  // i dont care about castling rights (yet)
+  // _casling_rights = tokens[2];
 
-  // half move count is a pain to parse
-  
-  std::cout << "Move count: " << _move_count << "\n" << "Half move count: " << _half_move_count << "\n";
+  _passant_target = fen_to_point(tokens[3]);
+  _en_passant_enabled = tokens[3] != "-" ? true : false;
+  _half_move_count = std::stoi(tokens[4]);
+  _move_count = std::stoi(tokens[5]);
 }
 
 /******************************************************************************
@@ -484,6 +532,25 @@ BoardManager::Board BoardManager::fen_to_board(std::string fen) {
     }
   }
   return b;
+}
+
+/******************************************************************************
+ * Method: BoardManager::point_to_fen(std::string fen)
+ * 
+ *****************************************************************************/
+std::string BoardManager::point_to_fen(Point p) {
+  std::string fen = "";
+  fen += (char)(p.y + 'a');
+  fen += (char)(p.x - 1 + '1');
+  return fen;
+}
+
+/******************************************************************************
+ * Method: BoardManager::fen_to_Point(std::string fen)
+ * 
+ *****************************************************************************/
+Point BoardManager::fen_to_point(std::string fen) {
+  return Point { (int)(fen[1] - '1'), (int)(fen[0] - 'a')};
 }
 
 /******************************************************************************

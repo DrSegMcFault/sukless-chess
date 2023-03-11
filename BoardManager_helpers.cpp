@@ -41,24 +41,31 @@ std::vector<Move> BoardManager::GPM_Piece(Piece p)
 
 
      if (!p.has_moved &&
+       validPoint(p.x - mod, p.y) &&
        !_board[p.x - mod][p.y] &&
+       validPoint(p.x - mod*2, p.y) &&
        !_board[p.x - mod*2][p.y])
      {
        possible.push_back(Move {start,Point{p.x - mod*2, p.y} });
      }
 
      // en passant
-    //  if (en_pass_enabled) {
-    //    if (_board[p.x][p.y - 1] && _board[p.x][p.y - 1].type == PAWN
-    //        && _board[p.x][p.y - 1].color != p.color) 
-    //   {
-    //     possible.push_back(Move {start, Point {p.x - mod, p.y - 1} });
-    //   } else if (_board[p.x][p.y + 1] && _board[p.x][p.y + 1].type == PAWN
-    //        && _board[p.x][p.y + 1].color != p.color) 
-    //   {
-    //     possible.push_back(Move {start, Point {p.x - mod, p.y + 1} });
-    //   }
-    //  }
+     if (_en_passant_enabled) {
+      auto m = p.color == Color::WHITE ? -1 : 1;
+      if (validPoint(p.x, p.y -1) &&
+          _board[p.x][p.y - 1].type == PAWN &&
+          _board[p.x][p.y - 1].color != p.color) 
+      {
+        possible.push_back(Move {start, Point {p.x - m, p.y - 1} });
+
+      } else if (validPoint(p.x, p.y + 1) &&
+                 _board[p.x][p.y + 1].type == PAWN &&
+                 _board[p.x][p.y + 1].color != p.color) 
+      {
+        possible.push_back(Move {start, Point {p.x - m, p.y + 1} });
+      }
+     }
+
      break;
    }
 
@@ -124,7 +131,8 @@ std::vector<Move> BoardManager::GPM_Piece(Piece p)
        // if the king hasnt moved
        if (!p.has_moved) {
          // if im not already in check
-         if (_board[p.x][p.y + 3] &&
+         if (validPoint(p.x, p.y + 3) &&
+             _board[p.x][p.y + 3] &&
              _board[p.x][p.y + 3].type == ROOK &&
              !_board[p.x][p.y + 3].has_moved)
          {
@@ -138,7 +146,8 @@ std::vector<Move> BoardManager::GPM_Piece(Piece p)
 
          // queen side castle
          // if im not already in check
-         if (_board[p.x][p.y - 4] &&
+         if (validPoint(p.x, p.y - 4) &&
+             _board[p.x][p.y - 4] &&
              _board[p.x][p.y - 4].type == ROOK &&
              !_board[p.x][p.y - 4].has_moved)
          {

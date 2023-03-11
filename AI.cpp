@@ -33,26 +33,6 @@ Move AI::move()
 }
 
 /******************************************************************************
- *
- * Method: AI::isCheckmate(Board b)
- * - returns true if the given board is in checkmate 
- *****************************************************************************/
-bool AI::isCheckmate(Board b)
-{
-  // my move has taken place
-  // generate the other player's possible moves
-  // if all the them result in check, then it is checkmate
-  auto opponent_moves = GAPM_Opposing(_controlling, b);
-  for (auto m : opponent_moves) {
-    if (!isMoveCheck(m, b)) {
-      return false;
-    }
-  }
-  std::cout << "AI found checkmate!\n";
-  return true;
-}
-
-/******************************************************************************
  * Method: AI::evaluate(Move m)
  *
  * returns a score for the given move 
@@ -76,7 +56,7 @@ int AI::evaluate(Move m)
       auto piece_from = _game->pieceAt(m.from.x, m.from.y);
 
       // below this is the result of 1 move
-      _game->do_move(m, local);
+      _game->do_move(m);
 
       auto other_color = _controlling == WHITE ? BLACK : WHITE;
 
@@ -90,9 +70,9 @@ int AI::evaluate(Move m)
         score += 5 + val_capture;
       }
 
-      if (isColorInCheck(other_color, local))
+      if (_game->isColorInCheck(other_color))
       {
-        if (isCheckmate(local)) {
+        if (_game->isCheckmate()) {
           return 10000;
         }
         // if check and immune, very valuable
@@ -216,28 +196,6 @@ int AI::getPieceValue(Piece p)
 
 /******************************************************************************
  *
- * Method: AI::isMoveCheck(Piece p)
- * returns whether or not the proposed move results in check
- *****************************************************************************/
-bool AI::isMoveCheck(Move m, Board b)
-{
-  auto pieceColor = b[m.from.x][m.from.y].Color();
-
-  std::vector<Move> possible;
-
-  Board local(b);
-
-  auto res = _game->do_move(m, local);
-
-  possible = GAPM_Opposing(pieceColor, local);
-
-  auto king = getKing(pieceColor, local);
-
-  return containsPoint(king.x, king.y, possible);
-}
-
-/******************************************************************************
- *
  * Method: AI::isCapture(Move m)
  * was the move a capture
  *****************************************************************************/
@@ -257,7 +215,7 @@ bool AI::isPieceImmune(int x, int y, const Board& b)
 {
   auto p = b[x][y];
   auto possible = GAPM_Opposing(_controlling, b);
-  if (containsPoint(p.x, p.y, possible)) {
+  if (_game->containsPoint(p.x, p.y, possible)) {
     return false;
   }
   return true;

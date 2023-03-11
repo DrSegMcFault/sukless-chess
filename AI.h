@@ -25,16 +25,14 @@ class AI {
 
   private:
     Color _controlling;
-    BoardManager* _game;
+    BoardManager* const _game;
     Difficulty _difficulty;
+
     Move decent_move(std::vector<Move> possible);
     bool isCapture(Move m);
     bool isPieceImmune(int x, int y, const Board& b);
-    bool isAttacking(Move m);
-    bool isCheckmate(Board b);
     int evaluate(Move m);
     int getPieceValue(Piece p);
-    bool isMoveCheck(Move m, Board b);
     Move getRandMove(const std::vector<Pair>& pairs);
 
     const int pawn_white_p[8][8] = {

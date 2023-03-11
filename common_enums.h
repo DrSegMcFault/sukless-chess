@@ -1,6 +1,5 @@
 #pragma once
 
-// Piece color
 enum Color {
   WHITE = 0,
   BLACK = 1,
@@ -35,11 +34,3 @@ struct Move {
   Point to;
 };
 
-enum MoveType {
-  NORMAL = 0,
-  Q_SIDE_CASTLE = 1,
-  K_SIDE_CASTLE = 2,
-
-  // next move can be en passant
-  ENABLE_PASSANT = 3
-};

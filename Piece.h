@@ -4,10 +4,12 @@
 #include "common_enums.h"
 
 class Piece {
+
   private:
     std::string prefixPath = "resources/";
 
   public:
+
     std::string icon = "";
     Color color = C_NONE;
     PieceType type = NONE;

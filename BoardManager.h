@@ -13,14 +13,14 @@ class BoardManager {
     using Board = std::vector<std::vector<Piece>>;
 
     bool isCheckmate();
-    bool resultsInCheck(Move m);
 
     void reset();
     std::vector<Move> genThisPossible(Piece p);
 
+    bool resultsInCheck(Move m);
+
     // try and move if true, the move took place
     MoveResult move(Move m);
-    MoveType do_move(Move m, Board& b);
 
     Piece pieceAt(int x, int y);
 
@@ -37,7 +37,21 @@ class BoardManager {
     Board fen_to_board(std::string fen);
     PieceType fen_to_type(char c);
 
+    const bool isColorInCheck(Color c);
+    bool containsPoint(int x, int y, std::vector<Move> possible);
+
   private:
+
+    
+    // dont need this anymore, leaving for now
+    enum MoveType {
+      NORMAL = 0,
+      Q_SIDE_CASTLE = 1,
+      K_SIDE_CASTLE = 2,
+
+      // next move can be en passant
+      ENABLE_PASSANT = 3
+    };
 
     Board _board;
     uint32_t _move_count = 0;
@@ -46,7 +60,8 @@ class BoardManager {
     std::vector<std::string> _history;
 
     std::string board_to_fen();
-    std::string fen_to_state(std::string fen);
+
+    void fen_to_state(std::string fen);
 
     void initBoard();
     bool _en_passant_enabled = false;
@@ -59,8 +74,8 @@ class BoardManager {
     std::vector<Move> rookPossible(Piece p);
     std::vector<Move> bishopPossible(Piece p);
 
-    bool containsPoint(int x, int y, std::vector<Move> possible);
-    const bool isColorInCheck(Color c);
+    MoveType do_move(Move m);
+
     Point getKing(Color c);
 
     bool validPoint(int x, int y) const {

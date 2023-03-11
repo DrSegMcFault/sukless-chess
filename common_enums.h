@@ -41,5 +41,5 @@ enum MoveType {
   K_SIDE_CASTLE = 2,
 
   // next move can be en passant
-  EN_PASSANT = 3
+  ENABLE_PASSANT = 3
 };

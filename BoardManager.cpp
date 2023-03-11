@@ -1,73 +1,74 @@
-#include "Game.h"
+#include "BoardManager.h"
 #include <iostream>
 
 /******************************************************************************
  *
- * Method: Game::Game()
+ * Method: BoardManager::BoardManager()
  *
  *****************************************************************************/
-Game::Game()
+BoardManager::BoardManager()
 {
   _board = std::vector<std::vector<Piece>>(8, std::vector<Piece>(8, Piece()));
   initBoard();
 }
 
 /******************************************************************************
- * PUBLIC
- * Method: Game::reset()
+ *
+ * Method: BoardManager::BoardManager()
  *
  *****************************************************************************/
-void Game::reset()
+BoardManager::BoardManager(std::string fen)
+{
+  fen_to_state(fen);
+}
+
+/******************************************************************************
+ * PUBLIC
+ * Method: BoardManager::reset()
+ *
+ *****************************************************************************/
+void BoardManager::reset()
 {
   initBoard();
 }
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::genThisPossible()
+ * Method: BoardManager::genThisPossible()
  * - returns the possible moves for this piece
  *****************************************************************************/
-std::vector<Move> Game::genThisPossible(Piece p)
+std::vector<Move> BoardManager::genThisPossible(Piece p)
 {
-  return GPM_Piece(p, _board);
+  return GPM_Piece(p);
 }
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::move(Move m)
+ * Method: BoardManager::move(Move m)
  *****************************************************************************/
-MoveResult Game::move(Move m)
+MoveResult BoardManager::move(Move m)
 {
   auto possible_moves = genThisPossible(pieceAt(m.from.x, m.from.y));
 
   if (containsPoint(m.to.x, m.to.y, possible_moves) &&
       !resultsInCheck(m))
   {
-    auto move_type = do_move(m, _board);
+    if (do_move(m, _board) == MoveType::ENABLE_PASSANT) {
+      _en_passant_enabled = true;
+      auto mod = _isWhiteTurn ? 1 : -1;
+      _passant_target = Point(m.to.x - mod, m.to.y);
+    }
 
-    switch(move_type) {
-      case MoveType::NORMAL:
-        // do nothing
-        break;
-      case MoveType::K_SIDE_CASTLE:
-        // update the FEN castling rights
-        break;
-      case MoveType::Q_SIDE_CASTLE:
-        // update the FEN castling rights
-        break;
-      case MoveType::EN_PASSANT:
-        // update the fen en passant target square 
-        _en_passant_enabled = true;
-        break;
+    // black is moving, increment the full move count
+    if (!_isWhiteTurn) {
+      _move_count++;
     }
 
     _isWhiteTurn = !_isWhiteTurn;
 
-    // update the FEN turn here
-
-    _move_count++;
+    _half_move_count++;
     
-    _history.push_back(ChessUtils::board_to_fen(_board));
+    _history.push_back(board_to_fen());
 
     if (_history.size() >= 3) {
       auto count = 0;
@@ -91,11 +92,11 @@ MoveResult Game::move(Move m)
 
 /******************************************************************************
  *
- * Method: Game::do_move(Move, Board)
+ * Method: BoardManager::do_move(Move, Board)
  * 
  * - performs the move and returns the type of move
  *****************************************************************************/
-MoveType Game::do_move(Move m, Board &board)
+MoveType BoardManager::do_move(Move m, Board &board)
 {
   auto from_x = m.from.x;
   auto from_y = m.from.y;
@@ -154,13 +155,13 @@ MoveType Game::do_move(Move m, Board &board)
     if (validPoint(to_x, to_y - 1)) {
 
       if (board[to_x][to_y - 1].type == PAWN ) {
-        return MoveType::EN_PASSANT;
+        return MoveType::ENABLE_PASSANT;
       }
 
     } else if (validPoint(to_x, to_y + 1)) {
 
       if (board[to_x][to_y + 1].type == PAWN) {
-        return MoveType::EN_PASSANT;
+        return MoveType::ENABLE_PASSANT;
       }
 
     }
@@ -172,10 +173,10 @@ MoveType Game::do_move(Move m, Board &board)
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::isCheckmate()
+ * Method: BoardManager::isCheckmate()
  *
  *****************************************************************************/
-bool Game::isCheckmate()
+bool BoardManager::isCheckmate()
 {
   const auto cur_player_color = _isWhiteTurn ? WHITE : BLACK;
   
@@ -184,7 +185,7 @@ bool Game::isCheckmate()
     for (int j = 0; j < 8; j++) {
       auto piece = _board[i][j];
       if (piece && piece.Color() == cur_player_color) {
-        auto this_piece_possible = GPM_Piece(piece, _board);
+        auto this_piece_possible = GPM_Piece(piece);
         for (auto move : this_piece_possible) {
           if (!resultsInCheck(move)) {
             return false; 
@@ -199,36 +200,36 @@ bool Game::isCheckmate()
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::pieceAt(x, y)
+ * Method: BoardManager::pieceAt(x, y)
  *****************************************************************************/
-Piece Game::pieceAt(int x, int y)
+Piece BoardManager::pieceAt(int x, int y)
 {
   return validPoint(x, y) ? _board[x][y] : Piece();
 }
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::getBoard()
+ * Method: BoardManager::getBoard()
  *****************************************************************************/
-Game::Board Game::getBoard()
+BoardManager::Board BoardManager::getBoard()
 {
   return _board;
 }
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::historyAt(int index)
+ * Method: BoardManager::historyAt(int index)
  *****************************************************************************/
-const std::string Game::historyAt(int index)
+const std::string BoardManager::historyAt(int index)
 {
   return _history.at(index);
 }
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::colorMatchesTurn(Color)
+ * Method: BoardManager::colorMatchesTurn(Color)
  *****************************************************************************/
-const bool Game::colorMatchesTurn(Color c)
+const bool BoardManager::colorMatchesTurn(Color c)
 {
   return (c == WHITE && _isWhiteTurn) ||
          (c == BLACK && !_isWhiteTurn);
@@ -236,21 +237,21 @@ const bool Game::colorMatchesTurn(Color c)
 
 /******************************************************************************
  * PUBLIC
- * Method: Game::colorMatchesTurn(Color)
+ * Method: BoardManager::colorMatchesTurn(Color)
  *****************************************************************************/
-std::vector<Move> Game::genAllPossibleOpposing(Color c)
+std::vector<Move> BoardManager::genAllPossibleOpposing(Color c)
 {
-  return GAPM_Opposing(c, _board);
+  return GAPM_Opposing(c);
 }
 
 /******************************************************************************
  *
- * Method: Game::resultsInCheck(Move m)
+ * Method: BoardManager::resultsInCheck(Move m)
  *
  * -- given a proposed move, see if that move results in check
  *    for the same color piece
  *****************************************************************************/
-bool Game::resultsInCheck(Move m)
+bool BoardManager::resultsInCheck(Move m)
 {
   auto pieceColor = _board[m.from.x][m.from.y].Color();
 
@@ -261,7 +262,7 @@ bool Game::resultsInCheck(Move m)
   if (_board[m.from.x][m.from.y].type == KING && dy_pos >= 2) {
   
     auto y_dir = m.to.y - m.from.y < 0 ? -1 : 1;
-    possible = GAPM_Opposing(pieceColor, _board);
+    possible = GAPM_Opposing(pieceColor);
 
     return (containsPoint(m.from.x, m.from.y, possible) ||
             containsPoint(m.from.x, m.from.y + (1 * y_dir), possible) ||
@@ -269,11 +270,10 @@ bool Game::resultsInCheck(Move m)
   } else {
 
     Board local(_board);
-    auto res = do_move(m, local);
 
-    possible = GAPM_Opposing(pieceColor, local);
+    possible = GAPM_Opposing(pieceColor);
 
-    auto king = getKing(pieceColor, local);
+    auto king = getKing(pieceColor);
 
     return containsPoint(king.x, king.y, possible);
   }
@@ -281,10 +281,10 @@ bool Game::resultsInCheck(Move m)
 
 /******************************************************************************
  *
- * Method: Game::initBoard()
+ * Method: BoardManager::initBoard()
  *
  *****************************************************************************/
-void Game::initBoard()
+void BoardManager::initBoard()
 {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
@@ -339,5 +339,175 @@ void Game::initBoard()
   _history.clear();
   _isWhiteTurn = true;
   _move_count = 0;
-  _history.push_back(ChessUtils::board_to_fen(_board));
+  _half_move_count = 0;
+  _history.push_back(board_to_fen());
+}
+
+
+/******************************************************************************
+ * Method: BoardManaher::board_to_fen(x, y, possible)
+ * 
+ * returns the standard FEN representation of the board
+ * https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+ *****************************************************************************/
+std::string BoardManager::board_to_fen()
+{
+  std::string fen = "";
+  int empty = 0;
+  int x = 0;
+  int y = 0;
+
+  while (x < 8) {
+    while (y < 8) {
+      if (_board[x][y]) {
+        fen += _board[x][y].typeToFEN();
+        y++;
+      } else {
+        while (y < 8 && !_board[x][y]) {
+          empty++;
+          y++;
+        }
+        if (empty > 0 && empty <= 8) {
+          fen += std::to_string(empty);
+          empty = 0;
+        }
+      }
+    }
+
+    y = 0;
+    empty = 0;
+
+    if (x != 7) {
+      fen += "/";
+    }
+
+    x++;
+  }
+
+  // add turn
+  fen += _isWhiteTurn ? " w " : " b ";
+
+  // castling rights
+  auto white_king = getKing(Color::WHITE);
+  auto black_king = getKing(Color::BLACK);
+  
+  if (pieceAt(white_king.x, white_king.y).has_moved &&
+      pieceAt(black_king.x, black_king.y).has_moved) 
+  {
+    fen += "-";
+  } 
+  else { 
+
+    if (pieceAt(0,0).type == ROOK &&
+        !pieceAt(0, 0).has_moved &&
+        !pieceAt(black_king.x, black_king.y).has_moved)
+    {
+      fen += "Q";
+    }
+
+    if (pieceAt(0,7).type == ROOK &&
+        !pieceAt(0, 7).has_moved &&
+        !pieceAt(black_king.x, black_king.y).has_moved)
+    {
+      fen += "K";
+    }
+
+    if (pieceAt(7,0).type == ROOK &&
+        !pieceAt(7, 0).has_moved &&
+        !pieceAt(white_king.x, white_king.y).has_moved)
+    {
+      fen += "q";
+    }
+
+    if (pieceAt(7,7).type == ROOK &&
+        !pieceAt(7, 7).has_moved &&
+        !pieceAt(white_king.x, white_king.y).has_moved)
+    {
+      fen += "k";
+    }
+  }
+
+  fen += " ";
+  
+  // en passant target square
+
+  // halfmove clock
+  fen += std::to_string(_half_move_count) + " ";
+
+  // fullmove number
+  fen += std::to_string(_move_count);
+  std::cout << fen << std::endl;
+
+  return fen;
+}
+
+/******************************************************************************
+ * Method: BoardManager::fen_to_board(std::string fen)
+ * 
+ * returns a board from a FEN string
+ *****************************************************************************/
+std::string BoardManager::fen_to_state(std::string fen)
+{
+  std::cout << "Fen to state: " << fen << "\n";
+
+  _board = fen_to_board(fen);
+
+  // just tokenize the fen and get by known indices
+  _isWhiteTurn = fen[fen.find(" ") + 1] == 'w' ? true : false;
+
+  auto str = fen.substr(fen.find_last_of(" ") + 1);
+  _move_count = std::stoi(str);
+
+  // half move count is a pain to parse
+  std::cout << "Move count: " << _move_count << "\n" << "Half move count: " << _half_move_count << "\n";
+}
+
+/******************************************************************************
+ * Method: BoardManager::fen_to_board(std::string fen)
+ * 
+ * returns a board from a FEN string
+ *****************************************************************************/
+BoardManager::Board BoardManager::fen_to_board(std::string fen) {
+
+  Board b = std::vector<std::vector<Piece>>(8, std::vector<Piece>(8));
+  int x = 0;
+  int y = 0;
+  for (auto c : fen) {
+    if (c == ' ') {
+      break;
+    } else if (c == '/') {
+      x++;
+      y = 0;
+    } else if (c >= '1' && c <= '8') {
+      y += c - '0';
+    } else {
+      b[x][y] = Piece(x, y, fen_to_type(c), isupper(c) ? WHITE : BLACK);
+      y++;
+    }
+  }
+  return b;
+}
+
+/******************************************************************************
+ * Method: BoardManager::fen_to_type(char c)
+ * 
+ * returns the correlated PieceType
+ *****************************************************************************/
+PieceType BoardManager::fen_to_type(char c) {
+  switch (toupper(c)) {
+    case 'P':
+      return PAWN;
+    case 'R':
+      return ROOK;
+    case 'N':
+      return KNIGHT;
+    case 'B':
+      return BISHOP;
+    case 'Q':
+      return QUEEN;
+    case 'K':
+      return KING;
+    default:
+      return NONE;
+  }
 }

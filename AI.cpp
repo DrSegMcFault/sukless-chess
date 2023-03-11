@@ -7,7 +7,7 @@
  * Method: AI::AI()
  *
  *****************************************************************************/
-AI::AI(Color to_control, Difficulty d, Game* game)
+AI::AI(Color to_control, Difficulty d, BoardManager* game)
   : _controlling(to_control),
     _difficulty(d),
     _game(game)

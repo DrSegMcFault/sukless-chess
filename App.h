@@ -5,10 +5,10 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_mixer.h"
-#include "Game.h"
+#include "BoardManager.h"
 #include "AI.h"
 
-class App : public ChessUtils {
+class App {
   public:
     App();
     ~App();
@@ -36,7 +36,7 @@ class App : public ChessUtils {
 
     AppState _state;
 
-    Game* _game;
+    BoardManager* _game;
     AI* _ai;
 
     using Board = std::vector<std::vector<Piece>>;

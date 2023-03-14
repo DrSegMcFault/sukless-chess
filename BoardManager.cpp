@@ -1,6 +1,6 @@
 #include "BoardManager.h"
-#include <iostream>
 #include <sstream>
+#include <string>
 #include <assert.h>
 
 /******************************************************************************
@@ -62,20 +62,17 @@ MoveResult BoardManager::move(Move m)
       _en_passant_enabled = true;
       auto mod = _isWhiteTurn ? -1 : 1;
       _passant_target = Point(m.to.x - mod, m.to.y);
-    } else if (result == MoveType::PERFORM_PASSANT && !_en_passant_enabled){
-      assert(false);
-
-    } else if (_en_passant_enabled && result != MoveType::PERFORM_PASSANT ) {
-      _en_passant_enabled = false;
-      _passant_target = Point {-1, -1};
     } else if (result == MoveType::PERFORM_PASSANT && _en_passant_enabled) {
       _en_passant_enabled = false;
       _passant_target = Point {-1, -1};
       // do the actual logic to clear the piece we took
       auto mod = _isWhiteTurn ? -1 : 1;
       _board[m.to.x - mod][m.to.y].Clear();
+    } else {
+      _en_passant_enabled = false;
+      _passant_target = Point {-1, -1};
     }
-
+    
     // black is moving, increment the full move count
     if (!_isWhiteTurn) {
       _move_count++;
@@ -150,7 +147,7 @@ BoardManager::MoveType BoardManager::do_move(Move m)
   // and there isnt a piece there, then we can perform the passant move
   if (_board[to_x][to_y].type == PAWN &&
       (dx == 1 && dy == 1) &&
-      !_board[to_x][to_y])
+      !_board[to_x - mod][to_y])
   {
     return MoveType::PERFORM_PASSANT;
   }
@@ -458,8 +455,7 @@ std::string BoardManager::board_to_fen()
   fen += " ";
 
   // en passant target square
-  if (validPoint(_passant_target.x , _passant_target.y) &&
-      _en_passant_enabled)
+  if (_en_passant_enabled && validPoint(_passant_target.x, _passant_target.y))
   {
     fen += point_to_fen(_passant_target) + " ";
   } else {
@@ -471,7 +467,6 @@ std::string BoardManager::board_to_fen()
 
   // fullmove number
   fen += std::to_string(_move_count);
-  std::cout << fen << std::endl;
 
   return fen;
 }
@@ -501,9 +496,13 @@ void BoardManager::fen_to_state(std::string fen)
 
   // i dont care about castling rights (yet)
   // _casling_rights = tokens[2];
-
-  _passant_target = fen_to_point(tokens[3]);
-  _en_passant_enabled = tokens[3] != "-" ? true : false;
+  
+  _en_passant_enabled = tokens[3] == "-" ? false : true;
+  if (_en_passant_enabled) {
+    _passant_target = fen_to_point(tokens[3]);
+  } else {
+    _passant_target = Point(-1, -1);
+  }
   _half_move_count = std::stoi(tokens[4]);
   _move_count = std::stoi(tokens[5]);
 }
@@ -541,7 +540,7 @@ BoardManager::Board BoardManager::fen_to_board(std::string fen) {
 std::string BoardManager::point_to_fen(Point p) {
   std::string fen = "";
   fen += (char)(p.y + 'a');
-  fen += (char)(p.x - 1 + '1');
+  fen += std::to_string(8 - p.x);
   return fen;
 }
 
@@ -550,7 +549,7 @@ std::string BoardManager::point_to_fen(Point p) {
  * 
  *****************************************************************************/
 Point BoardManager::fen_to_point(std::string fen) {
-  return Point { (int)(fen[1] - '1'), (int)(fen[0] - 'a')};
+  return Point { 8 - (int)(fen[1] - '0'), (int)(fen[0] - 'a')};
 }
 
 /******************************************************************************

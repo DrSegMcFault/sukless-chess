@@ -51,7 +51,7 @@ std::vector<Move> BoardManager::GPM_Piece(Piece p)
 
      // en passant
      if (_en_passant_enabled) {
-      auto m = p.color == Color::WHITE ? -1 : 1;
+      auto m = p.color == Color::WHITE ? 1 : -1;
       if (validPoint(p.x, p.y -1) &&
           _board[p.x][p.y - 1].type == PAWN &&
           _board[p.x][p.y - 1].color != p.color) 

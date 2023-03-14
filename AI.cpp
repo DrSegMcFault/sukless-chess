@@ -173,12 +173,7 @@ Move AI::decent_move(std::vector<Move> possible)
     i++;
   }
 
-  if (best_score <= 0) {
-    move = getRandMove(scores);
-    std::cout << "Random move\n";
-  } else {
-    move = scores[best_idx].move;
-  }
+  move = scores[best_idx].move;
   
   std::cout << "best score is " << best_score << "\n";
 
@@ -198,10 +193,10 @@ int AI::getPieceValue(Piece p)
     case KNIGHT:
     case BISHOP:
       return 300;
-    case QUEEN:
-      return 900;
     case ROOK:
       return 500;
+    case QUEEN:
+      return 900;
     default:
       return 0;
   }

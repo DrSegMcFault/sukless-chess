@@ -4,10 +4,12 @@
 #include "common_enums.h"
 
 class Piece {
+
   private:
     std::string prefixPath = "resources/";
 
   public:
+
     std::string icon = "";
     Color color = C_NONE;
     PieceType type = NONE;
@@ -19,6 +21,18 @@ class Piece {
     int prev_y = 0;
 
     Piece() = default;
+
+    // this is trivially copyable, but just in case
+    Piece(const Piece& other) {
+      x = other.x;
+      y = other.y;
+      prev_x = other.prev_x;
+      prev_y = other.prev_y;
+      type = other.type;
+      color = other.color;
+      icon = other.icon;
+      has_moved = other.has_moved;
+    }
 
     Piece(int x, int y)
       : x(x),

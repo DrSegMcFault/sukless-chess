@@ -1,10 +1,11 @@
 #include "common_enums.h"
-#include "Game.h"
-#include "ChessUtils.h"
+#include "BoardManager.h"
 
-class AI : public ChessUtils {
+class AI {
   public:
-  
+     
+    using Board = std::vector<std::vector<Piece>>;
+
     enum Difficulty {
       EASY = 0,
       MEDIUM = 1,
@@ -17,23 +18,20 @@ class AI : public ChessUtils {
       Move move;
     };
 
-    AI(Color c, Difficulty d, Game* game);
+    AI(Color c, Difficulty d, BoardManager* game);
 
     Move move();
 
+    int getPieceValue(Piece p);
 
   private:
     Color _controlling;
-    Game* _game;
+    BoardManager* const _game;
     Difficulty _difficulty;
+
     Move decent_move(std::vector<Move> possible);
     bool isCapture(Move m);
-    bool isPieceImmune(int x, int y, const Board& b);
-    bool isAttacking(Move m);
-    bool isCheckmate(Board b);
     int evaluate(Move m);
-    int getPieceValue(Piece p);
-    bool isMoveCheck(Move m, Board b);
     Move getRandMove(const std::vector<Pair>& pairs);
 
     const int pawn_white_p[8][8] = {

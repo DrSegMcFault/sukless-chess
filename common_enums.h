@@ -1,6 +1,5 @@
 #pragma once
 
-// Piece color
 enum Color {
   WHITE = 0,
   BLACK = 1,
@@ -34,3 +33,4 @@ struct Move {
   Point from;
   Point to;
 };
+

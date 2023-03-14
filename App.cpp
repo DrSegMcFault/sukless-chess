@@ -51,7 +51,7 @@ App::App()
   p_textures.insert({"resources/knight_white.png", loadTexture("resources/knight_white.png") });
   p_textures.insert({"resources/knight_black.png", loadTexture("resources/knight_black.png") });
 
-  _game = new Game();
+  _game = new BoardManager();
   _ai = new AI(Color::BLACK, AI::MEDIUM, _game);
 }
 
@@ -136,7 +136,7 @@ void App::run()
         auto y = ev.button.y;
         int grid_x = floor(x / (_screenH / 8));
         int grid_y = floor(y / (_screenW / 8));
-        viewing_move_num = _game->MoveCount();
+        viewing_move_num = _game->HalfMoveCount();
 
         // get the piece that was clicked on
         if (!clicked.has_value()) {
@@ -146,7 +146,7 @@ void App::run()
             if (_game->colorMatchesTurn(this_piece.Color()))
             {
               clicked = this_piece;
-              _possible_moves = _game->genThisPossible(this_piece);
+              _possible_moves = _game->genPossible(this_piece);
               displayPossible();
             }
           }
@@ -183,19 +183,19 @@ void App::run()
             }
 
             displayBoard(
-              ChessUtils::fen_to_board(_game->historyAt(--viewing_move_num)));
+              _game->fen_to_board(_game->historyAt(--viewing_move_num)));
 
             break;
           }
           case SDLK_RIGHT:
           {
             // go forward in move history
-            if (viewing_move_num + 1 > _game->MoveCount()) {
+            if (viewing_move_num + 1 > _game->HalfMoveCount()) {
               break;
             }
 
             displayBoard(
-              ChessUtils::fen_to_board(_game->historyAt(++viewing_move_num)));
+              _game->fen_to_board(_game->historyAt(++viewing_move_num)));
 
             break;
           }
@@ -372,7 +372,7 @@ SDL_Texture* App::loadTexture(const char* filepath)
  *****************************************************************************/
 void App::simulate()
 {
-  // Game* gm = new Game();
+  // BoardManager* gm = new BoardManager();
   // AI ai_black(Color::BLACK, AI::MEDIUM, gm);
   // AI ai_white(Color::WHITE, AI::EASY, gm);
 
@@ -382,7 +382,7 @@ void App::simulate()
   // int draw_stalemate = 0;
   // int move_count = 0; 
   // while (games != 10) {
-  //  if (ai_white.move(gm->genAllPossibleOpposing(Color::BLACK))) {
+  //  if (ai_white.move(gm->genPossibleOpposing(Color::BLACK))) {
   //    move_count++;
   //    if (gm->isCheckmate()) {
   //      whiteWs++; 
@@ -398,7 +398,7 @@ void App::simulate()
   //   gm->reset();
   //  }
 
-  //  if (ai_black.move(gm->genAllPossibleOpposing(Color::WHITE))) {
+  //  if (ai_black.move(gm->genPossibleOpposing(Color::WHITE))) {
   //    move_count++;
   //    if (gm->isCheckmate()) {
   //      blackWs++; 

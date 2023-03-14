@@ -7,7 +7,7 @@
  * Method: AI::AI()
  *
  *****************************************************************************/
-AI::AI(Color to_control, Difficulty d, Game* game)
+AI::AI(Color to_control, Difficulty d, BoardManager* game)
   : _controlling(to_control),
     _difficulty(d),
     _game(game)
@@ -21,7 +21,7 @@ AI::AI(Color to_control, Difficulty d, Game* game)
 Move AI::move()
 {
   auto possible =
-    _game->genAllPossibleOpposing(_controlling == WHITE ? BLACK : WHITE);
+    _game->genPossibleOpposing(_controlling == WHITE ? BLACK : WHITE);
 
   switch (_difficulty) {
     case EASY:
@@ -30,26 +30,6 @@ Move AI::move()
     case IMPOSSIBLE:
       return decent_move(possible);
   }
-}
-
-/******************************************************************************
- *
- * Method: AI::isCheckmate(Board b)
- * - returns true if the given board is in checkmate 
- *****************************************************************************/
-bool AI::isCheckmate(Board b)
-{
-  // my move has taken place
-  // generate the other player's possible moves
-  // if all the them result in check, then it is checkmate
-  auto opponent_moves = GAPM_Opposing(_controlling, b);
-  for (auto m : opponent_moves) {
-    if (!isMoveCheck(m, b)) {
-      return false;
-    }
-  }
-  std::cout << "AI found checkmate!\n";
-  return true;
 }
 
 /******************************************************************************
@@ -67,71 +47,81 @@ int AI::evaluate(Move m)
     case MEDIUM:
     {
       // the 'best' move is to take a piece, put the other player
-      // in check, and the piece cannot be taken after
+      // in check, and the piece cannot be taken after, OR Checkmate
       int score = 0;
 
-      Board local(_game->getBoard());
-
-      bool was_attacked = !isPieceImmune(m.from.x, m.from.y, local);
+      bool was_attacked = _game->containsPoint(m.from.x, m.from.y,
+                                               _game->genPossibleOpposing(_controlling));
       auto piece_from = _game->pieceAt(m.from.x, m.from.y);
+      
+      // a copy of the game state, board included
+      BoardManager game_cpy(_game->board_to_fen());
 
       // below this is the result of 1 move
-      ChessUtils::move(m, local);
+      switch ( game_cpy.move(m) ) {
+        case CHECKMATE:
+          return 10000;
+        case INVALID:
+          return -10000;
+        case DRAW:
+          return 0;
+        default:
+          break;
+      }
 
       auto other_color = _controlling == WHITE ? BLACK : WHITE;
+      auto opponent_moves = game_cpy.genPossibleOpposing(_controlling);
+
+      auto isPieceImmune = [&,&opponent_moves=opponent_moves](int x, int y) {
+        return !game_cpy.containsPoint(x, y, opponent_moves);
+      };
 
       if (isCapture(m)) {
         int val_capture = getPieceValue(_game->pieceAt(m.to.x, m.to.y));
 
-        if (isPieceImmune(m.to.x, m.to.y, local)) {
+        if (isPieceImmune(m.to.x, m.to.y)) {
           score += 300;
         }
          
         score += 5 + val_capture;
       }
 
-      if (isColorInCheck(other_color, local))
+      if (game_cpy.isColorInCheck(other_color))
       {
-        if (isCheckmate(local)) {
-          return 10000;
-        }
         // if check and immune, very valuable
-        if (isPieceImmune(m.to.x, m.to.y, local)) {
-          score += 1000;
+        if (isPieceImmune(m.to.x, m.to.y)) {
+          score += 50;
         }
         score += 50;
       }
 
-      if (!isPieceImmune(m.to.x, m.to.y, local)) {
+      if (!isPieceImmune(m.to.x, m.to.y)) {
         score -= getPieceValue(_game->pieceAt(m.from.x, m.from.y));;
       }
 
       // If the piece was under attack and a retreating
       // square is available, the move is equal to the
       // pieces value
-      if (was_attacked && isPieceImmune(m.to.x, m.to.y, local)){
+      if (was_attacked && isPieceImmune(m.to.x, m.to.y)){
         score += getPieceValue(piece_from);
       }
 
-      // currently a hack for early game pawn movement
-      // TODO: all other piece types
-      if (isPieceImmune(m.to.x, m.to.y, local)) {
-        if (piece_from.type == PAWN) {
-          switch (piece_from.Color()) {
-            case WHITE:
-              score += pawn_white_p[m.to.x][m.to.y];
-              break;
-            case BLACK:
-              score += pawn_black_p[m.to.x][m.to.y];
-              break;
-            default:
-              break;
-          }
-        } else if (piece_from.type == KNIGHT) {
-          score += knight_p[m.to.x][m.to.y];
+      // add positional value, if applicable
+      if (piece_from.type == PAWN) {
+        switch (piece_from.Color()) {
+          case WHITE:
+            score += pawn_white_p[m.to.x][m.to.y];
+            break;
+          case BLACK:
+            score += pawn_black_p[m.to.x][m.to.y];
+            break;
+          default:
+            break;
         }
-
+      } else if (piece_from.type == KNIGHT) {
+        score += knight_p[m.to.x][m.to.y];
       }
+
       return score;
       break;
     }
@@ -183,11 +173,7 @@ Move AI::decent_move(std::vector<Move> possible)
     i++;
   }
 
-  if (best_score <= 0) {
-    move = getRandMove(scores);
-  } else {
-    move = scores[best_idx].move;
-  }
+  move = scores[best_idx].move;
   
   std::cout << "best score is " << best_score << "\n";
 
@@ -207,34 +193,13 @@ int AI::getPieceValue(Piece p)
     case KNIGHT:
     case BISHOP:
       return 300;
-    case QUEEN:
-      return 900;
     case ROOK:
       return 500;
+    case QUEEN:
+      return 900;
     default:
       return 0;
   }
-}
-
-/******************************************************************************
- *
- * Method: AI::isMoveCheck(Piece p)
- * returns whether or not the proposed move results in check
- *****************************************************************************/
-bool AI::isMoveCheck(Move m, Board b)
-{
-  auto pieceColor = b[m.from.x][m.from.y].Color();
-
-  std::vector<Move> possible;
-
-  Board local(b);
-  ChessUtils::move(m, local);
-
-  possible = GAPM_Opposing(pieceColor, local);
-
-  auto king = getKing(pieceColor, local);
-
-  return containsPoint(king.x, king.y, possible);
 }
 
 /******************************************************************************
@@ -247,21 +212,6 @@ bool AI::isCapture(Move m) {
   auto piece_dest = _game->pieceAt(m.to.x, m.to.y);
 
   return piece_dest && piece_moving.Color() != piece_dest.Color();
-}
-
-/******************************************************************************
- * Method: AI::isPieceImmmune(x, y, const Board&)
- *
- * can the piece be taken
- *****************************************************************************/
-bool AI::isPieceImmune(int x, int y, const Board& b)
-{
-  auto p = b[x][y];
-  auto possible = GAPM_Opposing(_controlling, b);
-  if (containsPoint(p.x, p.y, possible)) {
-    return false;
-  }
-  return true;
 }
 
 /******************************************************************************

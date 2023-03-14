@@ -41,7 +41,7 @@ std::string Piece::typeToFEN() const
     case KNIGHT:
       return color == WHITE ? "N" : "n"; 
     case NONE:
-      return "x";
+      return "";
   }
 }
 

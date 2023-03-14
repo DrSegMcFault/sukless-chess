@@ -66,8 +66,6 @@ MoveResult BoardManager::move(Move m)
       _en_passant_enabled = false;
       _passant_target = Point {-1, -1};
       // do the actual logic to clear the piece we took
-      auto mod = _isWhiteTurn ? -1 : 1;
-      _board[m.to.x - mod][m.to.y].Clear();
     } else {
       _en_passant_enabled = false;
       _passant_target = Point {-1, -1};
@@ -121,6 +119,7 @@ BoardManager::MoveType BoardManager::do_move(Move m)
   auto dy = abs(to_y - from_y);
   bool is_castle = dy == 2 && _board[from_x][from_y].type == KING;
   auto mod = _board[from_x][from_y].color == WHITE ? 1 : -1;
+  auto dest_piece_present = _board[to_x][to_y].type != NONE;
 
   // move contsructor?
   _board[to_x][to_y].prev_x = from_x;
@@ -147,8 +146,9 @@ BoardManager::MoveType BoardManager::do_move(Move m)
   // and there isnt a piece there, then we can perform the passant move
   if (_board[to_x][to_y].type == PAWN &&
       (dx == 1 && dy == 1) &&
-      !_board[to_x - mod][to_y])
+      !dest_piece_present)
   {
+    _board[to_x + mod][to_y].Clear();
     return MoveType::PERFORM_PASSANT;
   }
 

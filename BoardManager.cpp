@@ -61,7 +61,7 @@ MoveResult BoardManager::move(Move m)
     if (result == MoveType::ENABLE_PASSANT) {
       _en_passant_enabled = true;
       auto mod = _isWhiteTurn ? -1 : 1;
-      _passant_target = Point(m.to.x - mod, m.to.y);
+      _passant_target = Point{m.to.x - mod, m.to.y};
     } else if (result == MoveType::PERFORM_PASSANT && _en_passant_enabled) {
       _en_passant_enabled = false;
       _passant_target = Point {-1, -1};
@@ -501,7 +501,7 @@ void BoardManager::fen_to_state(std::string fen)
   if (_en_passant_enabled) {
     _passant_target = fen_to_point(tokens[3]);
   } else {
-    _passant_target = Point(-1, -1);
+    _passant_target = Point{-1, -1};
   }
   _half_move_count = std::stoi(tokens[4]);
   _move_count = std::stoi(tokens[5]);

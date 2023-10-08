@@ -1,4 +1,7 @@
 # sukless-chess
+## This project has been deprecated! no futher development will occur. a new chess project is being started
+
+
 The goal of this project is to provide a feature-rich yet minimalistic implementation of chess.
 ## vcpkg is highly reccomended
 1. install vcpkg and the relavent triplet
